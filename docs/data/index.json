@@ -1,35 +1,31 @@
 {
-    "team": [
-        {
-            "name": "Dilshan D.M.T.",
-            "email": "e20069@eng.pdn.ac.lk",
-            "eNumber": "E/20/069"
-        },
-        {
-            "name": "Nuwan Dilshan",
-            "email": "e20455@eng.pdn.ac.lk",
-            "eNumber": "E/20/455"
-        },
-        {
-            "name": "Vikum Chamida",
-            "email": "e20328@eng.pdn.ac.lk",
-            "eNumber": "E/20/328"
-        },
-        {
-            "name": "Karunarathne K.N.P.",
-            "email": "e20189@eng.pdn.ac.lk",
-            "eNumber": "E/20/328"
-        }
-    ],
-    "supervisors": [
-        {
-            "name": "Dr. Isuru Nawinne",
-            "email": "isurunawinne@eng.pdn.ac.lk"
-        },
-        {
-            "name": "Ms. Saadia Jameel",
-            "email": "e18147@eng.pdn.ac.lk"
-        }
-    ],
-    "tags": ["Web", "Embedded Systems"]
+  "team": [
+    {
+      "name": "Dilshan D.M.T.",
+      "email": "e20069@eng.pdn.ac.lk",
+      "eNumber": "E/20/069"
+    },
+    {
+      "name": "Nuwan Dilshan",
+      "email": "e20455@eng.pdn.ac.lk",
+      "eNumber": "E/20/455"
+    },
+    {
+      "name": "Vikum Chamida",
+      "email": "e20328@eng.pdn.ac.lk",
+      "eNumber": "E/20/328"
+    },
+    {
+      "name": "Karunarathne K.N.P.",
+      "email": "e20189@eng.pdn.ac.lk",
+      "eNumber": "E/20/189"
+    }
+  ],
+  "supervisors": [
+    {
+      "name": "Dr. Isuru Nawinne",
+      "email": "isurunawinne@eng.pdn.ac.lk"
+    }
+  ],
+  "tags": ["Web", "Embedded Systems"]
 }
