@@ -2,40 +2,43 @@
 
 ```
 {
-  "title": "FlickNest",
-  "team": [
-    {
-      "name": Dilshan D.M.T.,
-      "email": "e20069@eng.pdn.ac.lk",
-      "eNumber": "E/20/069"
-    },
-    {
-      "name": "Karunarathne K.N.P.",
-      "email": "e20189@eng.pdn.ac.lk",
-      "eNumber": "E/20/189"
-    },
-    {
-      "name": "Rathnaweera R.V.C.",
-      "email": "e20328@eng.pdn.ac.lk",
-      "eNumber": "E/20/328"
-    },
-    {
-      "name": "Dilshan W.M.N.",
-      "email": "e20455@eng.pdn.ac.lk",
-      "eNumber": "E/20/455"
-    }
-  ],
-  "supervisors": [
-    {
-      "name": "Dr. Isuru Nawinne",
-      "email": "isurunawinne@eng.pdn.ac.lk"
-    },
-    {
-      "name": "Miss. Saadia Jameel",
-      "email": "e18147@eng.pdn.ac.lk"
-    }
-  ],
-  "tags": ["Web", "Embedded Systems"]
+    "title": "FlickNest",
+    "team": [
+        {
+            "name": "Dilshan D.M.T.",
+            "email": "e20069@eng.pdn.ac.lk",
+            "eNumber": "E/20/069"
+        },
+        {
+            "name": "Karunarathne K.N.P.",
+            "email": "e20189@eng.pdn.ac.lk",
+            "eNumber": "E/20/189"
+        },
+        {
+            "name": "Rathnaweera R.V.C.",
+            "email": "e20328@eng.pdn.ac.lk",
+            "eNumber": "E/20/328"
+        },
+        {
+            "name": "Dilshan W.M.N.",
+            "email": "e20455@eng.pdn.ac.lk",
+            "eNumber": "E/20/455"
+        }
+    ],
+    "supervisors": [
+        {
+            "name": "Dr. Isuru Nawinne",
+            "email": "isurunawinne@eng.pdn.ac.lk"
+        },
+        {
+            "name": "Miss. Saadia Jameel",
+            "email": "e18147@eng.pdn.ac.lk"
+        }
+    ],
+    "tags": [
+        "Web",
+        "Embedded Systems"
+    ]
 }
 ```
 
