@@ -17,17 +17,18 @@
             justify-content: center;
             gap: 2rem;
         }
+
         .team-member {
-            width: 200px;
+            width: 250px; /* Increased width */
+            padding: 1.2rem; /* Slightly more padding */
             text-align: center;
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 1rem;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
         .team-member img {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
             border-radius: 8px;
         }
@@ -36,11 +37,13 @@
             margin: 0.5rem 0;
         }
         .team-member p {
-            margin: 0.5rem 0;
-            font-size: 0.9rem;
-            color: #555;
-        }
-        
+        font-size: 0.9rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        max-width: 100%;
+}
+
         
     </style>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
@@ -86,25 +89,25 @@
                 </header>
                 <div class="team-list">
                     <div class="team-member">
-                        <img src="images/image1.jpg" alt="Dilshan D.M.T." />
+                        <img src="images/image1.jpeg" alt="Dilshan D.M.T." />
                         <h3>Dilshan D.M.T.</h3>
                         <p>Email: <a href="mailto:e20069@eng.pdn.ac.lk">e20069@eng.pdn.ac.lk</a></p>
                         <p>E Number: E/20/069</p>
                     </div>
                     <div class="team-member">
-                        <img src="images/image2.jpg" alt="Nuwan Dilshan" />
+                        <img src="images/image3.jpeg" alt="Nuwan Dilshan" />
                         <h3>Nuwan Dilshan</h3>
                         <p>Email: <a href="mailto:e20455@eng.pdn.ac.lk">e20455@eng.pdn.ac.lk</a></p>
                         <p>E Number: E/20/455</p>
                     </div>
                     <div class="team-member">
-                        <img src="images/image1.jpg" alt="Vikum Chamida" />
+                        <img src="images/image2.jpeg" alt="Vikum Chamida" />
                         <h3>Vikum Chamida</h3>
                         <p>Email: <a href="mailto:e20328@eng.pdn.ac.lk">e20328@eng.pdn.ac.lk</a></p>
                         <p>E Number: E/20/328</p>
                     </div>
                     <div class="team-member">
-                        <img src="images/image2.jpg" alt="Karunarathne K.N.P." />
+                        <img src="images/image4.jpeg" alt="Karunarathne K.N.P." />
                         <h3>Karunarathne K.N.P.</h3>
                         <p>Email: <a href="mailto:e20189@eng.pdn.ac.lk">e20189@eng.pdn.ac.lk</a></p>
                         <p>E Number: E/20/189</p>
@@ -115,12 +118,18 @@
                 </header>
                 <div class="team-list">
                     <div class="team-member">
-                        <img src="images/image1.jpg" alt="Dr. Isuru Nawinne" />
+                        <img src="images/sir.png" alt="Dr. Isuru Nawinne" />
                         <h3>Dr. Isuru Nawinne</h3>
                         <p>Email: <a href="mailto:isurunawinne@eng.pdn.ac.lk">isurunawinne@eng.pdn.ac.lk</a></p>
                     </div>
                 </div>
             </section>
+
+
+            <!-- Copyright -->
+        <div id="copyright">
+            <ul><li>&copy; FlickNest</li><li>Design: Team Byte crafters</li></ul>
+        </div>
 
         </div>
 
