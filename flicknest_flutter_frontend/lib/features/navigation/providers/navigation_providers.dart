@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
 import '../data/models/bottom_bar_nav_item.dart';
+import '../data/models/side_menu_item.dart';
 import '../data/repositories/bottomnavbar.repository.dart';
+import '../data/repositories/side_menu.repository.dart';
 import '../presentation/viewmodels/bottombar.viewmodel.dart';
 
 
@@ -15,11 +17,11 @@ final bottomBarRepositoryProvider = Provider((ref) {
   return BottomNavBarRepository();
 });
 
-// final sideMenuRepositoryProvider = Provider((ref) {
-//   return SideMenuRepository(ref);
-// });
-//
-// final sideMenuProvider = Provider<List<SideMenuItem>>((ref) {
-//   return ref.read(sideMenuRepositoryProvider).getSideMenuItems();
-// });
+final sideMenuRepositoryProvider = Provider((ref) {
+  return SideMenuRepository();
+});
+
+final sideMenuProvider = Provider<List<SideMenuItem>>((ref) {
+  return ref.read(sideMenuRepositoryProvider).getSideMenuItems();
+});
 
