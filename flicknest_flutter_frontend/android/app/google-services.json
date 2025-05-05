@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "611179071521",
+    "firebase_url": "https://flicknestfirebase-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "flicknestfirebase",
+    "storage_bucket": "flicknestfirebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611179071521:android:d5d07edbfcb6e2f14f3b60",
+        "android_client_info": {
+          "package_name": "com.example.flicknest_flutter_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZDIAksIA_CbHqYyzuCP2KzqV_lSARrOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
