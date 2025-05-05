@@ -41,17 +41,53 @@
         <div id="main">
 
             <!-- Featured Post -->
-            <article class="post featured">
-                <header class="major">
-                    <h2>Introducing FlickNest<br />
-                    Gesture-Controlled Smart Automation</h2>
-                    <p>Our innovative smart bracelet captures hand gestures and translates them into commands for seamless smart device control.</p>
-                </header>
-                <a href="#" class="image main"><img src="images/bg.jpg" alt="FlickNest Smart Bracelet" /></a>
-                <ul class="actions special">
-                    <li><a href="generic.html" class="button large">Learn More</a></li>
-                </ul>
-            </article>
+            <div id="main">
+                <!-- Featured Post -->
+                <article class="post featured">
+                    <header class="major">
+                        <h2>FlickNest</h2>
+                        <h3> Gesture-Controlled Smart Automation</h3>
+                    </header>
+
+                    <!-- Video Section -->
+                    <video width="100%" controls>
+                        <source src="video/demo.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+
+                    <!-- Introduction Section -->
+                    <h2 style="text-align: left;">Introduction</h2>
+                    <p>
+                        Smart home automation has transformed the way we interact with our living spaces, but traditional control methods like smartphone apps and voice commands often fall short in terms of efficiency, accessibility, and convenience. Our project introduces a gesture-controlled home automation system, enabling users to seamlessly control devices using simple hand movements. By integrating machine learning, IoT, and cloud computing, we provide an intuitive, hands-free solution for smart living.
+                    </p>
+
+                    <!-- Real-World Problem & Solution Section -->
+                    <h2 style="text-align: left;">Real-World Problem & Solution</h2>
+                    <p>
+                        Existing smart home control systems lack inclusivity for individuals with physical disabilities, elderly users, or those engaged in activities where accessing a phone or voice assistant is inconvenient. Moreover, many gesture-based systems depend on external cameras, limiting their reliability and practicality for home automation.
+                    </p>
+                    <p>
+                        Our solution utilizes a wearable FlickNest band equipped with an MPU6050 sensor and ESP32 microcontroller to capture and process hand gestures. The data is processed locally using Edge Impulse’s TinyML model, then transmitted via MQTT to AWS IoT Core, where a Lambda function updates Firebase in real time. This allows connected devices—such as smart locks, lights, and appliances—to respond instantly. A Flutter mobile app keeps users informed of device states, ensuring a seamless and intelligent home automation experience.
+                    </p>
+
+                    <!-- Impact Section -->
+                    <h2 style="text-align: left;">Impact</h2>
+                    <p>
+                        🔹 Enhanced Accessibility – Empowers individuals with disabilities by providing a hands-free way to interact with smart devices.<br>
+                        🔹 Greater Convenience – Eliminates the need for phones or voice assistants, offering faster and more natural smart home control.<br>
+                        🔹 Improved Security – Enables gesture-based authentication for secure control of smart locks and home automation systems.<br>
+                        🔹 Energy Efficiency – Reduces power consumption by allowing users to control lights and appliances with simple gestures.<br>
+                        🔹 Scalability & Adaptability – Supports multiple environments, making it ideal for homes, offices, and industrial applications.
+                    </p>
+                    <p>
+                        By combining AI-driven gesture recognition, IoT connectivity, and cloud-based automation, this project is redefining the future of smart living with a highly responsive, secure, and inclusive solution.
+                    </p>
+
+                    <ul class="actions special">
+                        <li><a href="generic.html" class="button large">Learn More</a></li>
+                    </ul>
+                </article>
+            </div>
 
             <!-- Posts -->
             <section class="posts">
@@ -60,25 +96,67 @@
                         <h2><a href="#">System Architecture</a></h2>
                     </header>
                     <a href="#" class="image fit"><img src="images/system_architecture.jpg" alt="System Architecture" /></a>
-                    <p>From capturing positional data to executing commands, discover how FlickNest seamlessly integrates hardware and software for a smarter future.</p>
+                    <p>The system leverages Edge Impulse's ML capabilities to classify gestures 
+                        locally on the ESP32, reducing latency and reliance on cloud processing. 
+                        Using MQTT as the primary communication protocol, the ESP32 efficiently 
+                        transmits gesture data to AWS IoT Core, ensuring seamless integration with 
+                        cloud services. AWS Lambda functions process incoming data and update Firebase, 
+                        enabling real-time synchronization with the Flutter frontend. The home automation 
+                        devices, such as smart locks, lights, and appliances, act as MQTT subscribers, 
+                        allowing immediate response to recognized gestures. This architecture ensures 
+                        a scalable, low-latency, and secure IoT ecosystem for home automation.</p>
                     <ul class="actions special">
                         <li><a href="generic.html" class="button">Explore</a></li>
                     </ul>
                 </article>
                 <article>
                     <header>
-                        <h2><a href="#">Gesture Recognition</a></h2>
+                        <h2><a href="#">Data Path</a></h2>
                     </header>
                     <a href="#" class="image fit"><img src="images/Gesture_Control.png" alt="Gesture Recognition" /></a>
-                    <p>Advanced algorithms ensure accurate mapping of gestures to control signals, making automation intuitive and reliable.</p>
+                    <p>The data flow begins with MPU6050 capturing motion data, which the ESP32 processes using 
+                        Edge Impulse's TinyML model to classify gestures. Once a valid gesture is detected, the ESP32 publishes 
+                        the processed data to an MQTT broker, where multiple subscribers, including AWS IoT Core and smart devices,
+                         receive updates. AWS IoT Core routes the data to an AWS Lambda function, which updates Firebase in real time. 
+                         The Flutter app listens for Firebase updates, ensuring UI synchronization with device states. Meanwhile, 
+                        smart devices subscribed to the MQTT broker react instantly, enabling responsive home automation.</p>
                     <ul class="actions special">
                         <li><a href="generic.html" class="button">Learn More</a></li>
                     </ul>
                 </article>
             </section>
-        </div>
 
-        
+            <!-- Testing Section -->
+            <article class="post featured">
+                <h2 style="text-align: left;">Testing</h2>
+                <p>
+                    We conducted hardware, software, manual, and integration tests to ensure the reliability of our gesture-controlled home automation system.
+                </p>
+            
+                <!-- Hardware Testing -->
+                <h3 style="text-align: left;">1. Hardware Testing</h3>
+                <p>• Verified gesture motion capture using MPU6050 & ESP32.</p>
+                <p>• Ensured high accuracy (>85%) in gesture recognition with Edge Impulse.</p>
+                <p>• Measured response time for real-time device control.</p>
+            
+                <!-- Software Testing -->
+                <h3 style="text-align: left;">2. Software Testing</h3>
+                <p>• Used Flutter Fix to resolve UI issues and tested real-time Firebase synchronization.</p>
+                <p>• Validated MQTT communication using test clients, ensuring stable, low-latency messaging.</p>
+                <p>• Tested AWS Lambda function, confirming efficient data processing and Firebase updates.</p>
+            
+                <!-- Manual & Integration Tests -->
+                <h3 style="text-align: left;">3. Manual & Integration Tests</h3>
+                <p>• Performed 100+ gesture recognition tests to validate ML accuracy.</p>
+                <p>• Conducted end-to-end system tests, ensuring seamless interaction between ESP32, MQTT, AWS, Firebase, and Flutter.</p>
+                <p>• Tested network stability, multi-user scenarios, and smart device compatibility.</p>
+            
+                <ul class="actions special">
+                    <li><a href="generic.html" class="button large">Learn More</a></li>
+                </ul>
+            </article>
+            
+
         <!-- Copyright -->
         <div id="copyright">
             <ul><li>&copy; FlickNest</li><li>Design: Team Byte crafters</li></ul>

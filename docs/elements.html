@@ -38,23 +38,24 @@
 
                 <!-- Gesture Recognition -->
                 <h2>Gesture Recognition</h2>
-                <p>Our advanced algorithms map positional data into precise control signals, enabling seamless and intuitive smart device automation.</p>
+                <p>Our gesture-controlled home automation system uses advanced machine learning algorithms to map hand movements into precise control signals, enabling seamless and intuitive smart device automation.</p>
 
                 <!-- System Architecture -->
                 <h2>System Architecture</h2>
-                <p>The FlickNest system integrates hardware and software for efficient data capture, processing, and execution of smart device commands:</p>
+                <p>The system integrates hardware and software components for efficient data capture, processing, and execution of smart device commands:</p>
                 <ul>
-                    <li>The smart bracelet captures positional data using sensors.</li>
-                    <li>Data is processed by the ESP32 microcontroller and sent to the mobile app.</li>
-                    <li>The app translates gestures into commands and communicates with smart devices via Bluetooth or Wi-Fi.</li>
+                    <li>The MPU6050 sensor captures motion data from wrist movements.</li>
+                    <li>Data is processed by the ESP32 microcontroller using the Edge Impulse ML model.</li>
+                    <li>Recognized gestures are sent as MQTT commands to AWS IoT Core, which triggers actions on connected devices like lights, sockets, and door locks.</li>
                 </ul>
 
                 <!-- Key Features -->
                 <h2>Key Features</h2>
                 <ul>
                     <li>Hands-free operation with intuitive gestures.</li>
-                    <li>Inclusive design for accessibility.</li>
-                    <li>Secure and privacy-focused communication protocols.</li>
+                    <li>Dual authentication for door locks (fingerprint and gesture-based).</li>
+                    <li>Real-time device control and status updates via a Flutter mobile app.</li>
+                    <li>Secure communication using MQTT and AWS IoT Core.</li>
                 </ul>
 
                 <!-- Hardware Components -->
@@ -68,19 +69,66 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>ESP32 Module</td>
-                            <td>Processes sensor data and communicates with the app.</td>
+                            <td>ESP32 (NodeMCU)</td>
+                            <td>Processes sensor data, runs the Edge Impulse ML model, and communicates with AWS IoT Core via MQTT.</td>
                         </tr>
                         <tr>
-                            <td>Sensors</td>
-                            <td>Capture precise positional data for gesture recognition.</td>
+                            <td>MPU6050 Sensor</td>
+                            <td>Captures precise motion data for gesture recognition.</td>
                         </tr>
                         <tr>
-                            <td>Battery Pack</td>
-                            <td>Ensures long-term usability of the smart bracelet.</td>
+                            <td>Fingerprint Scanner</td>
+                            <td>Enables secure fingerprint-based door unlocking.</td>
+                        </tr>
+                        <tr>
+                            <td>Smart Sockets & Light Modules</td>
+                            <td>Controlled via ESP32 to automate appliances and lighting based on gesture commands.</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Software Components -->
+                <h2>Software Components</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Edge Impulse ML Model</td>
+                            <td>Classifies gestures in real-time on the ESP32 microcontroller.</td>
+                        </tr>
+                        <tr>
+                            <td>MQTT Communication</td>
+                            <td>Enables reliable message delivery between ESP32 and AWS IoT Core.</td>
+                        </tr>
+                        <tr>
+                            <td>AWS IoT Core</td>
+                            <td>Acts as the central MQTT broker for managing device commands.</td>
+                        </tr>
+                        <tr>
+                            <td>Firebase</td>
+                            <td>Provides real-time database updates and role-based access control (RBAC).</td>
+                        </tr>
+                        <tr>
+                            <td>Flutter Mobile App</td>
+                            <td>Displays real-time device status, logs, and gesture configuration settings.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- System Workflow -->
+                <h2>System Workflow</h2>
+                <ol>
+                    <li><strong>Gesture Captured:</strong> MPU6050 records wrist movements and sends data to the ESP32.</li>
+                    <li><strong>Gesture Classified:</strong> Edge Impulse ML model identifies the gesture and maps it to a specific command.</li>
+                    <li><strong>MQTT Message Published:</strong> ESP32 sends the command to AWS IoT Core via MQTT.</li>
+                    <li><strong>Device Receives Command:</strong> Subscribed devices (door lock, smart socket, or light socket) perform the corresponding action.</li>
+                    <li><strong>Firebase & UI Update:</strong> AWS Lambda updates Firebase, and the Flutter app reflects the real-time status.</li>
+                </ol>
 
                 <!-- Budget Breakdown -->
                 <h2>Budget Breakdown</h2>
@@ -175,7 +223,39 @@
                     </tfoot>
                 </table>
 
+                <!-- Conclusion -->
+                <h2>Conclusion</h2>
+                <p>This design ensures a seamless, low-latency, and secure gesture-controlled home automation experience. By integrating ESP32 NodeMCU, fingerprint scanner, smart sockets, and MQTT-based communication, our system enables effortless automation and real-time device control.</p>
 
+                <!-- Future Developments -->
+                <h3>Future Developments</h3>
+                <ul>
+                    <li>Integration with voice assistants like Alexa and Google Assistant.</li>
+                    <li>Expansion to support more devices and appliances.</li>
+                    <li>Enhanced machine learning models for improved gesture recognition accuracy.</li>
+                </ul>
+
+                <!-- Commercialization Plans -->
+                <h3>Commercialization Plans</h3>
+                <ul>
+                    <li>Partnering with smart home device manufacturers for integration.</li>
+                    <li>Launching a subscription-based service for advanced features.</li>
+                    <li>Expanding to international markets with localized support.</li>
+                </ul>
+
+                <!-- GitHub Repo Link -->
+                <h3>GitHub Repository</h3>
+                <p>Explore our project on GitHub: <a href="https://github.com/cepdnaclk/e20-3yp-FlickNest" target="_blank">FlickNest GitHub Repo</a></p>
+
+                <!-- CN ePortfolio Links -->
+                <h3>CN ePortfolio Links</h3>
+                <ul>
+                    <li><a href="https://www.thecn.com/TD852" target="_blank">Dilshan D.M.T. (E/20/069)</a></li>
+                    <li><a href="https://www.thecn.com/VC531" target="_blank">Rathnaweera R.V.C. (E/20/328)</a></li>
+                    <li><a href="https://www.thecn.com/WD211" target="_blank">Dilshan W.M.N.(E/20/455)</a></li>
+                    <li><a href="https://www.thecn.com/KK1737" target="_blank">Karunarathne K.N.P.(E/20/189)
+                    </a></li>
+                </ul>
             </section>
         </div>
 

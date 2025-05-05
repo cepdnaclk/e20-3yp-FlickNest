@@ -1,0 +1,51 @@
+import json
+import firebase_admin
+from firebase_admin import credentials, db
+import os
+
+def lambda_handler(event, context):
+    try:
+        # Initialize Firebase Admin SDK (do this once per Lambda invocation)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate("firebasecredential.json")  # Load credentials directly
+            firebase_admin.initialize_app(cred, {
+                "databaseURL": os.environ.get("DATABASE_URL")  # Store URL in environment variable
+            })
+
+        # Extract data from the event (no 'body' key needed for IoT Core)
+        payload = event
+        print(payload)
+        circle = payload.get("circle")
+        idle = payload.get("idle")
+        shake = payload.get("shake")
+        wave = payload.get("wave")
+
+        # Validate the data (optional, but recommended)
+        if circle is None or idle is None or shake is None or wave is None:
+            raise ValueError("Invalid sensor data received")
+
+        # Update Firebase Realtime Database with inverted state if true
+        if circle:
+            ref = db.reference("symbols/sym_001/state")
+            current_state = ref.get() or False  # Handle potential None value
+            ref.set(not current_state)
+        if wave:
+            ref = db.reference("symbols/sym_002/state")
+            current_state = ref.get() or False
+            ref.set(not current_state)
+        if shake:
+            ref = db.reference("symbols/sym_003/state")
+            current_state = ref.get() or False
+            ref.set(not current_state)
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps("Data updated in Firebase successfully")
+        }
+
+    except Exception as e:
+        print("Error updating data in Firebase:", str(e))
+        return {
+            "statusCode": 500,
+            "body": json.dumps(f"Error updating data in Firebase: {str(e)}")  # Include error message in response
+        }
