@@ -1,7 +1,5 @@
 
 import 'dart:async';
-
-import 'package:flicknest_flutter_frontend/main.dart';
 import 'package:flicknest_flutter_frontend/styles/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';

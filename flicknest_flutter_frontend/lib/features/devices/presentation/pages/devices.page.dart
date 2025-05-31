@@ -175,6 +175,7 @@ class _DevicesPageState extends State<DevicesPage> {
                     _switchService.updateDeviceState(deviceId, newValue);
                     setState(() {
                       _devicesByRoom[roomId]["devices"][deviceId]["state"] = newValue;
+                      deviceData["symbol"]["source"] = "mobile";
                     });
                   },
                 ),

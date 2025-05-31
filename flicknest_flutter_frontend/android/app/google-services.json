@@ -13,7 +13,20 @@
           "package_name": "com.example.flicknest_flutter_frontend"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "611179071521-dmh65lqlrcbm9kpvei0dr5dg59ulfni9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flicknest_flutter_frontend",
+            "certificate_hash": "c3e3534fb90ef46889250bc98e4d5fa5d338a999"
+          }
+        },
+        {
+          "client_id": "611179071521-9999bcrr4aqvcfid6quqgro6eaqgfd7m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBZDIAksIA_CbHqYyzuCP2KzqV_lSARrOc"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "611179071521-9999bcrr4aqvcfid6quqgro6eaqgfd7m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "611179071521-k6gs59b11dpfookhiodgefod8jb5s9bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flicknestFlutterFrontend"
+              }
+            }
+          ]
         }
       }
     }

@@ -27,7 +27,7 @@ class BottomNavBarRepository {
       BottomBarNavItemModel(
         iconOption: FlickyAnimatedIconOptions.barsettings,
         route: SettingsPage.route
-      )
+      ),
     ];
   }
 }

@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <application
         android:label="flicknest_flutter_frontend"
         android:name="${applicationName}"

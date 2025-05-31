@@ -22,7 +22,6 @@ class HomePage extends StatelessWidget {
               children: [
                 HomePageHeader(),
                 HomeAutomationStyles.smallVGap,
-
                 HomeTileOptionsPanel()
               ],
             ),

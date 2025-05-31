@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 
-class DeviceService {
+class   DeviceService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref("environments/env_12345");
   final DatabaseReference _symbolsRef = FirebaseDatabase.instance.ref("symbols");
 
@@ -11,6 +11,7 @@ class DeviceService {
       if (!snapshot.exists) {
         print("🟠 No symbols found in stream.");
         return <String, dynamic>{};
+        
       }
 
       final symbolsData = Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
