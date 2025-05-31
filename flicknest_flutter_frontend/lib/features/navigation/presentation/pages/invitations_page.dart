@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:go_router/go_router.dart';
+import '../widgets/home_automation_appbar.dart';
+import '../widgets/home_automation_bottombar.dart';
 
 class InvitationsPage extends StatefulWidget {
   static const String route = '/invitations';
@@ -56,40 +59,148 @@ class _InvitationsPageState extends State<InvitationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Invitations')),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : invitations.isEmpty
-              ? const Center(child: Text('No invitations.'))
-              : ListView.builder(
-                  itemCount: invitations.length,
-                  itemBuilder: (context, index) {
-                    final inv = invitations[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(inv['environmentName'] ?? 'Unknown Environment'),
-                        subtitle: Text('Role: ${inv['role'] ?? ''}'),
-                        onTap: () {
-                          Navigator.of(context).pushNamed('/invitation-details', arguments: inv);
-                        },
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextButton(
-                              onPressed: () => _acceptInvitation(inv['id']),
-                              child: const Text('Accept'),
-                            ),
-                            TextButton(
-                              onPressed: () => _declineInvitation(inv['id']),
-                              child: const Text('Decline'),
-                            ),
-                          ],
+      appBar: const HomeAutomationAppBar(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.primary.withAlpha(13),
+              theme.colorScheme.surface,
+            ],
+          ),
+        ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : invitations.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.mail_outline,
+                          size: 64,
+                          color: theme.colorScheme.primary.withAlpha(128),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Invitations',
+                          style: theme.textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You have no pending invitations',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.textTheme.bodySmall?.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: invitations.length,
+                    itemBuilder: (context, index) {
+                      final inv = invitations[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: theme.colorScheme.outline.withAlpha(26),
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              context.push(
+                                '/invitation-details',
+                                extra: inv,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary.withAlpha(12),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          inv['role'] == 'co-admin' 
+                                              ? Icons.admin_panel_settings
+                                              : Icons.person_outline,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              inv['environmentName'] ?? 'Unknown Environment',
+                                              style: theme.textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Role: ${inv['role'] ?? ''}',
+                                              style: theme.textTheme.bodyMedium?.copyWith(
+                                                color: theme.textTheme.bodySmall?.color,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () => _declineInvitation(inv['id']),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: theme.colorScheme.error,
+                                          side: BorderSide(color: theme.colorScheme.error),
+                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        ),
+                                        child: const Text('Decline'),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      ElevatedButton(
+                                        onPressed: () => _acceptInvitation(inv['id']),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.primary,
+                                          foregroundColor: theme.colorScheme.onPrimary,
+                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        ),
+                                        child: const Text('Accept'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+      ),
+      bottomNavigationBar: const HomeAutomationBottomBar(),
     );
   }
 } 

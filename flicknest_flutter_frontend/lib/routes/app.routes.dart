@@ -1,4 +1,6 @@
 import 'package:flicknest_flutter_frontend/features/auth/presentation/pages/login_page.dart';
+import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
+import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitation_details_page.dart';
 // import 'package:flicknest_flutter_frontend/features/auth/presentation/pages/register_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,6 +42,13 @@ class AppRoutes {
         path: SplashPage.route,
         builder: (context, state) {
           return const SplashPage();
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: InvitationsPage.route,
+        builder: (context, state) {
+          return const InvitationsPage();
         },
       ),
       GoRoute(
@@ -122,6 +131,14 @@ class AppRoutes {
         path: CreateEnvironmentPage.route,
         builder: (context, state) {
           return const CreateEnvironmentPage();
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: InvitationDetailsPage.route,
+        builder: (context, state) {
+          final invitation = state.extra as Map<String, dynamic>?;
+          return InvitationDetailsPage(invitation: invitation);
         },
       ),
     ],

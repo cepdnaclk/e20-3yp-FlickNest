@@ -8,8 +8,8 @@ import '../../../../main.dart' show themeNotifier, environmentProvider, currentU
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../../../environments/presentation/pages/create_environment.dart';
-import 'package:your_app/features/navigation/presentation/pages/invitations_page.dart';
-import 'package:your_app/features/navigation/presentation/pages/invitation_details_page.dart';
+import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
+import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitation_details_page.dart';
 
 class SettingsPage extends ConsumerWidget {
   static const String route = '/settings';
@@ -77,7 +77,7 @@ class SettingsPage extends ConsumerWidget {
                 title: const Text('Invitations'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  Navigator.pushNamed(context, '/invitations');
+                  context.go(InvitationsPage.route);
                 },
               ),
               ListTile(
