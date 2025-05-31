@@ -4,28 +4,37 @@ import '../../../../Firebase/deviceService.dart';
 
 class RoomsPage extends StatefulWidget {
   static const String route = '/rooms';
-  const RoomsPage({super.key});
+  final SwitchService switchService;
+  final DeviceService deviceService;
+
+  const RoomsPage({
+    super.key,
+    required this.switchService,
+    required this.deviceService,
+  });
 
   @override
   State<RoomsPage> createState() => _RoomsPageState();
 }
 
 class _RoomsPageState extends State<RoomsPage> {
-  final SwitchService _switchService = SwitchService();
-  final DeviceService _deviceService = DeviceService();
+  late final SwitchService _switchService;
+  late final DeviceService _deviceService;
 
   Map<String, dynamic> _devicesByRoom = {};
   Map<String, dynamic> _symbolNames = {};
-  Map<String, dynamic> _symbolsData = {}; // Added to store symbols data
+  Map<String, dynamic> _symbolsData = {};
   List<String> _roomList = [];
   List<Map<String, String>> _availableSymbols = [];
-  Stream<Map<String, dynamic>>? _symbolsStream; // Added for symbol stream
+  Stream<Map<String, dynamic>>? _symbolsStream;
 
   @override
   void initState() {
     super.initState();
+    _switchService = widget.switchService;
+    _deviceService = widget.deviceService;
     _fetchDevices();
-    _listenToSymbolChanges(); // New method to listen to symbol changes
+    _listenToSymbolChanges();
   }
 
   @override
