@@ -18,6 +18,8 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentEnv = ref.watch(environmentProvider);
+    final environmentID = ref.watch(environmentProvider);
+    final userID = ref.watch(currentUserIdProvider);
 
     // Fetch all environments (you may want to cache or paginate in production)
     final dbRef = FirebaseDatabase.instance.ref('environments');
@@ -366,3 +368,10 @@ final firebaseEnvProvider = FutureProvider.family<Map, String>((ref, envId) asyn
 });
 
 final currentUserIdProvider = StateProvider<String>((ref) => 'user_001');
+
+Future<String?> getUserRole(String environmentID, String userID) async {
+  final ref = FirebaseDatabase.instance
+      .ref('environments/$environmentID/users/$userID/role');
+  final snapshot = await ref.get();
+  return snapshot.value as String?;
+}

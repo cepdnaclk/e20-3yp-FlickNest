@@ -1,6 +1,11 @@
 import 'package:flicknest_flutter_frontend/features/auth/presentation/pages/login_page.dart';
 import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
 import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitation_details_page.dart';
+import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/device_management.dart';
+import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/room_management.dart';
+import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/user_management.dart';
+import 'package:flicknest_flutter_frontend/Firebase/deviceService.dart';
+import 'package:flicknest_flutter_frontend/Firebase/switchModel.dart';
 // import 'package:flicknest_flutter_frontend/features/auth/presentation/pages/register_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,6 +22,8 @@ import '../features/about/presentation/pages/about_flick_nest.page.dart';
 import '../features/environments/presentation/pages/create_environment.dart';
 
 class AppRoutes {
+  static final deviceService = DeviceService();
+  static final switchService = SwitchService();
 
   static final router = GoRouter(
     routerNeglect: true,
@@ -68,8 +75,11 @@ class AppRoutes {
             parentNavigatorKey: Utils.tabNav,
             path: HomePage.route,
             pageBuilder: (context, state) {
-              return const NoTransitionPage(
-                child: HomePage(),
+              return NoTransitionPage(
+                child: HomePage(
+                  deviceService: deviceService,
+                  switchService: switchService,
+                ),
               );
             },
           ),
@@ -86,8 +96,11 @@ class AppRoutes {
             parentNavigatorKey: Utils.tabNav,
             path: RoomsPage.route,
             pageBuilder: (context, state) {
-              return const NoTransitionPage(
-                child: RoomsPage(),
+              return NoTransitionPage(
+                child: RoomsPage(
+                  deviceService: deviceService,
+                  switchService: switchService,
+                ),
               );
             },
           ),
@@ -131,6 +144,27 @@ class AppRoutes {
         path: CreateEnvironmentPage.route,
         builder: (context, state) {
           return const CreateEnvironmentPage();
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: DeviceManagementPage.route,
+        builder: (context, state) {
+          return const DeviceManagementPage();
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: RoomManagementPage.route,
+        builder: (context, state) {
+          return const RoomManagementPage();
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: UserManagementPage.route,
+        builder: (context, state) {
+          return const UserManagementPage();
         },
       ),
       GoRoute(
