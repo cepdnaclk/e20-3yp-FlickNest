@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 class   DeviceService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref("environments/env_12345");
   final DatabaseReference _symbolsRef = FirebaseDatabase.instance.ref("symbols");
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   // New method to listen to symbol changes
   Stream<Map<String, dynamic>> getSymbolsStream() {
@@ -150,6 +151,17 @@ class   DeviceService {
       print("✅ Device $deviceId removed, symbol $symbolId is now available");
     } catch (e) {
       print("❌ Error removing device: $e");
+    }
+  }
+
+  Future<void> updateDeviceRoom(String deviceId, String? roomId) async {
+    try {
+      await _database.child('devices/$deviceId').update({
+        'roomId': roomId ?? 'unassigned'
+      });
+    } catch (e) {
+      print('Error updating device room: $e');
+      throw Exception('Failed to update device room');
     }
   }
 }
