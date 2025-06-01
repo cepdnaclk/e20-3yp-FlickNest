@@ -28,29 +28,91 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  bool notificationsEnabled = true; // TODO: Replace with real value
+  bool notificationsEnabled = true;
+  Map<String, dynamic> environments = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEnvironments();
+  }
+
+  Future<void> _fetchEnvironments() async {
+    setState(() => isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          environments = {};
+          isLoading = false;
+        });
+        return;
+      }
+
+      // First, get all environments where the user is a member
+      final userRef = FirebaseDatabase.instance.ref('users/${user.uid}/environments');
+      final userEnvsSnapshot = await userRef.get();
+      
+      if (!userEnvsSnapshot.exists) {
+        setState(() {
+          environments = {};
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Get the environment details for each environment ID
+      final Map<String, dynamic> envs = {};
+      final userEnvIds = Map<String, dynamic>.from(userEnvsSnapshot.value as Map);
+      
+      await Future.wait(
+        userEnvIds.entries.map((entry) async {
+          final envId = entry.key;
+          final envRef = FirebaseDatabase.instance.ref('environments/$envId');
+          final envSnapshot = await envRef.get();
+          
+          if (envSnapshot.exists) {
+            envs[envId] = Map<String, dynamic>.from(envSnapshot.value as Map);
+          }
+        })
+      );
+
+      if (mounted) {
+        setState(() {
+          environments = envs;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching environments: $e');
+      if (mounted) {
+        setState(() {
+          environments = {};
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentEnv = ref.watch(environmentProvider);
-    // Fetch all environments
-    final dbRef = ref.watch(environmentProvider);
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: FutureBuilder(
-        future: Future.microtask(() async {
-          // Simulate fetching environments from Firebase
-          // Replace with your actual fetch logic
-          return await Future.value({});
-        }),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final envs = snapshot.data as Map;
-          return ListView(
+      body: isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             children: [
               const SettingsProfileSection(),
-              SettingsEnvironmentSection(envs: envs, currentEnv: currentEnv, ref: ref, context: context),
+              SettingsEnvironmentSection(
+                envs: environments, 
+                currentEnv: currentEnv, 
+                ref: ref, 
+                context: context
+              ),
               SettingsAppearanceSection(themeNotifier: themeNotifier),
               SettingsNotificationsSection(
                 notificationsEnabled: notificationsEnabled,
@@ -63,9 +125,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               const SettingsHelpSection(),
               const SettingsVersionSection(),
             ],
-          );
-        },
-      ),
+          ),
     );
   }
 }

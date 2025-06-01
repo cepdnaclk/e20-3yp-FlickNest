@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../Firebase/switchModel.dart';
 import '../../../../Firebase/deviceService.dart';
+import 'package:go_router/go_router.dart';
 
 class DevicesPage extends StatefulWidget {
   static const String route = '/devices';
@@ -360,7 +361,7 @@ class _DevicesPageState extends State<DevicesPage> {
         foregroundColor: theme.colorScheme.onBackground,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDeviceDialog,
+        onPressed: () => context.push('/admin/devices/add'),
         backgroundColor: theme.colorScheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text("Add Device", style: TextStyle(color: Colors.white)),
