@@ -3,7 +3,6 @@ import 'package:flicknest_flutter_frontend/features/landing/presentation/widgets
 import 'package:flicknest_flutter_frontend/helpers/enums.dart';
 import 'package:flicknest_flutter_frontend/styles/styles.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flicknest_flutter_frontend/main.dart' show environmentProvider, currentUserIdProvider;
@@ -11,6 +10,14 @@ import 'package:flicknest_flutter_frontend/features/settings/presentation/pages/
 import 'package:flicknest_flutter_frontend/Firebase/deviceService.dart';
 import 'package:flicknest_flutter_frontend/Firebase/switchModel.dart';
 import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/admin_dashboard.dart';
+import 'package:flicknest_flutter_frontend/features/landing/presentation/pages/coadmin_dashboard.dart';
+import 'package:flicknest_flutter_frontend/features/landing/presentation/pages/user_dashboard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final currentUserIdProvider = Provider<String>((ref) {
+  final user = FirebaseAuth.instance.currentUser;
+  return user?.uid ?? '';
+});
 
 class HomePage extends ConsumerWidget {
   static const String route = '/home';
@@ -28,19 +35,54 @@ class HomePage extends ConsumerWidget {
     final environmentID = ref.watch(environmentProvider);
     final userID = ref.watch(currentUserIdProvider);
 
+    // Debug: Print FirebaseAuth user info
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    print('[HomePage] currentUserId (provider): $userID');
+    print('[HomePage] FirebaseAuth.currentUser?.uid: ${firebaseUser?.uid}');
+    print('[HomePage] FirebaseAuth.currentUser?.email: ${firebaseUser?.email}');
+
+    // Print current user and environment info
+    print('[HomePage] currentUserId: $userID');
+    print('[HomePage] currentEnvironmentId: $environmentID');
+
     return FutureBuilder<String?>(
       future: getUserRole(environmentID, userID),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
+          print('[HomePage] Waiting for role data...');
           return const Center(child: CircularProgressIndicator());
         }
         final role = snapshot.data;
+        print('snapshot.data: ${snapshot.data}');
+        print('[HomePage] Role for user $userID in environment $environmentID: $role');
+        if (role == null) {
+          print('[HomePage] User not found in environment or no role set.');
+          return const Center(
+            child: Text(
+              'You have no access to this environment.\nPlease contact the administrator.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, color: Colors.redAccent),
+            ),
+          );
+        }
         if (role == 'admin') {
+          print('[HomePage] Showing AdminDashboard');
           return const AdminDashboard();
         } else if (role == 'co-admin') {
+          print('[HomePage] Showing CoAdminDashboard');
           return const CoAdminDashboard();
-        } else {
+        } else if (role == 'user') {
+          print('[HomePage] Showing UserDashboard');
           return const UserDashboard();
+        } else {
+          print('[HomePage] Unknown role, showing no access message.');
+          return const Center(
+            child: Text(
+              'You have no access to this environment.\nPlease contact the administrator.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, color: Colors.redAccent),
+            ),
+          );
         }
       },
     );
@@ -48,58 +90,10 @@ class HomePage extends ConsumerWidget {
 }
 
 Future<String?> getUserRole(String environmentID, String userID) async {
+  print('[getUserRole] Fetching role for user $userID in environment $environmentID');
   final ref = FirebaseDatabase.instance
       .ref('environments/$environmentID/users/$userID/role');
   final snapshot = await ref.get();
+  print('[getUserRole] Firebase snapshot value: ${snapshot.value}');
   return snapshot.value as String?;
-}
-
-class UserDashboard extends StatelessWidget {
-  const UserDashboard({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Dashboard')),
-      body: const Center(child: Text('Welcome, user!')),
-    );
-  }
-}
-
-class CoAdminDashboard extends StatelessWidget {
-  const CoAdminDashboard({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Co-Admin Dashboard')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.meeting_room),
-              title: const Text('View Rooms'),
-              subtitle: const Text('View and monitor rooms'),
-              onTap: () {
-                Navigator.pushNamed(context, '/coadmin/rooms');
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.devices),
-              title: const Text('View Devices'),
-              subtitle: const Text('View and control devices'),
-              onTap: () {
-                Navigator.pushNamed(context, '/coadmin/devices');
-              },
-            ),
-          ),
-          // Add more co-admin features as needed
-        ],
-      ),
-    );
-  }
 }
