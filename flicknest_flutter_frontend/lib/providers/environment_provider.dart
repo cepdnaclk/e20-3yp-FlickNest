@@ -3,9 +3,47 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Provider for the current authenticated user
+final currentAuthUserProvider = StreamProvider<User?>((ref) {
+  return FirebaseAuth.instance.authStateChanges();
+});
+
 // Provider to store the current environment ID
 final currentEnvironmentProvider = StateNotifierProvider<EnvironmentNotifier, String?>((ref) {
   return EnvironmentNotifier();
+});
+
+// Provider to get the current user's role in the current environment
+final currentUserRoleProvider = FutureProvider<String?>((ref) async {
+  final user = ref.watch(currentAuthUserProvider).value;
+  final environmentId = ref.watch(currentEnvironmentProvider);
+  
+  if (user == null || environmentId == null) return null;
+
+  try {
+    // Try to get role from environments/{environmentID}/users/{userID}/role
+    final envUserRef = FirebaseDatabase.instance
+        .ref('environments/$environmentId/users/${user.uid}/role');
+    final envUserSnapshot = await envUserRef.get();
+    
+    if (envUserSnapshot.exists) {
+      return envUserSnapshot.value as String?;
+    }
+
+    // If not found, try users/{userID}/environments/{environmentID}
+    final userEnvRef = FirebaseDatabase.instance
+        .ref('users/${user.uid}/environments/$environmentId');
+    final userEnvSnapshot = await userEnvRef.get();
+    
+    if (userEnvSnapshot.exists) {
+      return userEnvSnapshot.value as String?;
+    }
+
+    return null;
+  } catch (e) {
+    print('Error fetching user role: $e');
+    return null;
+  }
 });
 
 // Provider to fetch environment details
@@ -39,7 +77,7 @@ final environmentDetailsProvider = FutureProvider.family<Map<String, dynamic>?, 
 
 // Provider to fetch user's environments
 final userEnvironmentsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final user = FirebaseAuth.instance.currentUser;
+  final user = ref.watch(currentAuthUserProvider).value;
   if (user == null) return {};
 
   final userEnvsSnapshot = await FirebaseDatabase.instance

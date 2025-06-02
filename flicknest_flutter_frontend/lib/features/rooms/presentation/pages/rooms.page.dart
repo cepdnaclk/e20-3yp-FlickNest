@@ -168,10 +168,10 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                     ),
                   ),
                 ),
-              );
-            },
-          );
-        },
+            );
+          },
+        );
+      },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddRoomDialog,
@@ -204,13 +204,13 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
             labelText: 'Room Name',
             hintText: 'Enter room name',
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
-          ),
-          TextButton(
+                ),
+                TextButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
@@ -232,7 +232,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                 print('✅ Room created successfully');
 
                 if (mounted) {
-                  Navigator.pop(context);
+                      Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Room created successfully'),
