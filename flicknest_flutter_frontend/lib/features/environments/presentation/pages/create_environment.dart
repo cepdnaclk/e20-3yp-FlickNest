@@ -179,6 +179,8 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
       if (currentUser == null) throw Exception('No user logged in');
       final newEnvRef = FirebaseDatabase.instance.ref('environments').push();
       final envId = newEnvRef.key!;
+      
+      // Create environment with only admin in users section
       final Map<String, dynamic> envData = {
         'adminId': currentUser.uid,
         'name': _nameController.text.trim(),
@@ -192,66 +194,18 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
           }
         }
       };
-      if (_coAdminId != null && _coAdminUser != null) {
-        envData['users'][_coAdminId!] = {
-          'email': _coAdminUser!['email'],
-          'name': _coAdminUser!['name'] ?? 'Anonymous',
-          'role': 'co-admin',
-          'addedAt': ServerValue.timestamp,
-        };
-      }
-      for (final userId in _selectedUserIds) {
-        final user = _selectedUsers[userId]!;
-        envData['users'][userId] = {
-          'email': user['email'],
-          'name': user['name'] ?? 'Anonymous',
-          'role': 'user',
-          'addedAt': ServerValue.timestamp,
-        };
-      }
       await newEnvRef.set(envData);
 
-      // Add environment reference to all users' data
-      final List<Future> userUpdates = [];
-      
-      // Add to admin's environments
-      userUpdates.add(
-        FirebaseDatabase.instance
-          .ref('users/${currentUser.uid}/environments/$envId')
-          .set({
-            'role': 'admin',
-            'addedAt': ServerValue.timestamp,
-          })
-      );
-
-      // Add to co-admin's environments if exists
-      if (_coAdminId != null) {
-        userUpdates.add(
-          FirebaseDatabase.instance
-            .ref('users/$_coAdminId/environments/$envId')
-            .set({
-              'role': 'co-admin',
-              'addedAt': ServerValue.timestamp,
-            })
-        );
-      }
-
-      // Add to regular users' environments
-      for (final userId in _selectedUserIds) {
-        userUpdates.add(
-          FirebaseDatabase.instance
-            .ref('users/$userId/environments/$envId')
-            .set({
-              'role': 'user',
-              'addedAt': ServerValue.timestamp,
-            })
-        );
-      }
+      // Add environment reference to admin's data with simplified format
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser.uid}/environments/$envId')
+        .set('admin');
 
       // Add invitations for co-admin and users
       final inviterId = currentUser.uid;
       final envName = _nameController.text.trim();
       final List<Future> invitationFutures = [];
+      
       // Co-admin invitation
       if (_coAdminId != null && _coAdminUser != null) {
         final coAdminInvitationRef = FirebaseDatabase.instance.ref('users/${_coAdminId!}/invitations/$envId');
@@ -263,6 +217,7 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
           'timestamp': ServerValue.timestamp,
         }));
       }
+      
       // User invitations
       for (final userId in _selectedUserIds) {
         final userInvitationRef = FirebaseDatabase.instance.ref('users/$userId/invitations/$envId');
@@ -275,8 +230,8 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
         }));
       }
       
-      // Wait for all updates to complete
-      await Future.wait([...userUpdates, ...invitationFutures]);
+      // Wait for all invitations to be created
+      await Future.wait(invitationFutures);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

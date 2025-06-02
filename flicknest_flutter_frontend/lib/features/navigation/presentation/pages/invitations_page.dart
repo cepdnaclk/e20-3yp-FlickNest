@@ -48,13 +48,105 @@ class _InvitationsPageState extends State<InvitationsPage> {
   }
 
   void _acceptInvitation(String invitationId) async {
-    // TODO: Implement accept logic
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Accepted invitation.')));
+    if (currentUser == null) return;
+    
+    try {
+      setState(() => isLoading = true);
+      
+      // Get the invitation data
+      final invitationRef = FirebaseDatabase.instance.ref('users/${currentUser!.uid}/invitations/$invitationId');
+      final snapshot = await invitationRef.get();
+      if (!snapshot.exists || snapshot.value == null) {
+        throw Exception('Invitation not found');
+      }
+      
+      final invData = Map<String, dynamic>.from(snapshot.value as Map);
+      final environmentId = invData['environmentId'] as String;
+      final role = invData['role'] as String;
+      
+      // Add user to environment with simplified format
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser!.uid}/environments/$environmentId')
+        .set(role);
+
+      // Add user to environment's users list
+      await FirebaseDatabase.instance
+        .ref('environments/$environmentId/users/${currentUser!.uid}')
+        .set({
+          'addedAt': ServerValue.timestamp,
+          'email': currentUser!.email,
+          'name': currentUser!.displayName ?? 'Anonymous',
+          'role': role
+        });
+        
+      // Delete the invitation
+      await invitationRef.remove();
+      
+      // Refresh invitations list
+      await _fetchInvitations();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully accepted invitation'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to home to refresh the environment list
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to accept invitation: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   void _declineInvitation(String invitationId) async {
-    // TODO: Implement decline logic
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Declined invitation.')));
+    if (currentUser == null) return;
+    
+    try {
+      setState(() => isLoading = true);
+      
+      // Simply delete the invitation
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser!.uid}/invitations/$invitationId')
+        .remove();
+      
+      // Refresh invitations list
+      await _fetchInvitations();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invitation declined'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to decline invitation: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   @override

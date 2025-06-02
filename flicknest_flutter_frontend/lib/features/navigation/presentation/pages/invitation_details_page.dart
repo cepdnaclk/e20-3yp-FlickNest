@@ -3,11 +3,98 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../widgets/home_automation_appbar.dart';
 import '../widgets/home_automation_bottombar.dart';
+import 'package:go_router/go_router.dart';
 
 class InvitationDetailsPage extends StatelessWidget {
   static const String route = '/invitation-details';
   final Map<String, dynamic>? invitation;
   const InvitationDetailsPage({Key? key, this.invitation}) : super(key: key);
+
+  Future<void> _acceptInvitation(BuildContext context, Map<String, dynamic> inv) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+    
+    try {
+      // Get the invitation data
+      final invitationId = inv['id'] as String;
+      final environmentId = inv['environmentId'] as String;
+      final role = inv['role'] as String;
+      
+      // Add user to environment with simplified format
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser.uid}/environments/$environmentId')
+        .set(role);
+
+      // Add user to environment's users list
+      await FirebaseDatabase.instance
+        .ref('environments/$environmentId/users/${currentUser.uid}')
+        .set({
+          'addedAt': ServerValue.timestamp,
+          'email': currentUser.email,
+          'name': currentUser.displayName ?? 'Anonymous',
+          'role': role
+        });
+        
+      // Delete the invitation
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser.uid}/invitations/$invitationId')
+        .remove();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully accepted invitation'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigate to home to refresh the environment list
+        context.go('/home');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to accept invitation: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _declineInvitation(BuildContext context, Map<String, dynamic> inv) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+    
+    try {
+      final invitationId = inv['id'] as String;
+      
+      // Simply delete the invitation
+      await FirebaseDatabase.instance
+        .ref('users/${currentUser.uid}/invitations/$invitationId')
+        .remove();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invitation declined'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        // Navigate back or to home
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to decline invitation: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,12 +239,7 @@ class InvitationDetailsPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            // TODO: Decline logic
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Declined invitation.')),
-                            );
-                          },
+                          onPressed: () => _declineInvitation(context, inv),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.colorScheme.error,
                             side: BorderSide(color: theme.colorScheme.error),
@@ -172,12 +254,7 @@ class InvitationDetailsPage extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Accept logic
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Accepted invitation.')),
-                            );
-                          },
+                          onPressed: () => _acceptInvitation(context, inv),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.primary,
                             foregroundColor: theme.colorScheme.onPrimary,
