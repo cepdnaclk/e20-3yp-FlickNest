@@ -10,7 +10,6 @@ import 'helpers/theme_notifier.dart';
 import 'package:go_router/go_router.dart';
 
 final themeNotifier = ThemeNotifier();
-final environmentProvider = StateProvider<String>((ref) => 'env_12345'); // default env id
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,14 +31,14 @@ class HomeAutomationApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, mode, _) {
-    return MaterialApp.router(
+        return MaterialApp.router(
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           themeMode: mode,
-      debugShowCheckedModeBanner: false,
-      routeInformationProvider : AppRoutes.router.routeInformationProvider,
-      routeInformationParser: AppRoutes.router.routeInformationParser,
-      routerDelegate: AppRoutes.router.routerDelegate,
+          debugShowCheckedModeBanner: false,
+          routeInformationProvider: AppRoutes.router.routeInformationProvider,
+          routeInformationParser: AppRoutes.router.routeInformationParser,
+          routerDelegate: AppRoutes.router.routerDelegate,
         );
       },
     );

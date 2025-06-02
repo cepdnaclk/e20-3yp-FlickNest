@@ -5,8 +5,7 @@ import 'package:flicknest_flutter_frontend/styles/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flicknest_flutter_frontend/main.dart' show environmentProvider, currentUserIdProvider;
-import 'package:flicknest_flutter_frontend/features/settings/presentation/pages/settings.pages.dart' show currentUserIdProvider;
+import 'package:flicknest_flutter_frontend/providers/environment_provider.dart';
 import 'package:flicknest_flutter_frontend/Firebase/deviceService.dart';
 import 'package:flicknest_flutter_frontend/Firebase/switchModel.dart';
 import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/admin_dashboard.dart';
@@ -32,7 +31,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final environmentID = ref.watch(environmentProvider);
+    final environmentID = ref.watch(currentEnvironmentProvider) ?? '';
     final userID = ref.watch(currentUserIdProvider);
 
     // Debug: Print FirebaseAuth user info

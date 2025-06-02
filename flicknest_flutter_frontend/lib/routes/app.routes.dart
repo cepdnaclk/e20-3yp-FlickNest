@@ -20,6 +20,7 @@ import '../features/settings/presentation/pages/settings.pages.dart';
 import '../helpers/utils.dart';
 import '../features/about/presentation/pages/about_flick_nest.page.dart';
 import '../features/environments/presentation/pages/create_environment.dart';
+import '../features/rooms/presentation/pages/room_details_page.dart';
 
 class AppRoutes {
   static final deviceService = DeviceService();
@@ -96,11 +97,8 @@ class AppRoutes {
             parentNavigatorKey: Utils.tabNav,
             path: RoomsPage.route,
             pageBuilder: (context, state) {
-              return NoTransitionPage(
-                child: RoomsPage(
-                  deviceService: deviceService,
-                  switchService: switchService,
-                ),
+              return const NoTransitionPage(
+                child: RoomsPage(),
               );
             },
           ),
@@ -173,6 +171,18 @@ class AppRoutes {
         builder: (context, state) {
           final invitation = state.extra as Map<String, dynamic>?;
           return InvitationDetailsPage(invitation: invitation);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: Utils.mainNav,
+        path: RoomDetailsPage.route,
+        builder: (context, state) {
+          final Map<String, dynamic> params = state.extra as Map<String, dynamic>;
+          return RoomDetailsPage(
+            environmentId: params['environmentId'],
+            roomId: params['roomId'],
+            roomName: params['roomName'],
+          );
         },
       ),
     ],
