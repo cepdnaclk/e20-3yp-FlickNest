@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/environment_provider.dart';
+import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
 import 'room_details.page.dart';
 
 class RoomsPage extends ConsumerStatefulWidget {

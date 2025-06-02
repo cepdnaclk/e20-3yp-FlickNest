@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../providers/environment_provider.dart';
+import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
 
 // Provider for stats stream
 final statsStreamProvider = StreamProvider<DatabaseEvent>((ref) {

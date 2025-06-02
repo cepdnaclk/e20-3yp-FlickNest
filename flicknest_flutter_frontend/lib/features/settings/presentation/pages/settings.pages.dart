@@ -4,7 +4,7 @@ import '../../../../styles/styles.dart';
 import '../../../profile/presentation/pages/profile.page.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../helpers/theme_notifier.dart';
-import '../../../../providers/environment_provider.dart';
+import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
 import '../../../../main.dart' show themeNotifier;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
