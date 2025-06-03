@@ -3,22 +3,25 @@ import '../../../../Firebase/switchModel.dart';
 import '../../../../Firebase/deviceService.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../providers/environment/environment_provider.dart';
 
-class DevicesPage extends StatefulWidget {
+class DevicesPage extends ConsumerStatefulWidget {
   static const String route = '/devices';
   const DevicesPage({super.key});
 
   @override
-  State<DevicesPage> createState() => _DevicesPageState();
+  ConsumerState<DevicesPage> createState() => _DevicesPageState();
 }
 
-class _DevicesPageState extends State<DevicesPage> {
+class _DevicesPageState extends ConsumerState<DevicesPage> {
   final SwitchService _switchService = SwitchService();
   final DeviceService _deviceService = DeviceService();
   StreamSubscription? _devicesSubscription;
+  String? _environmentId;
 
   Map<String, dynamic> _devicesByRoom = {};
-  List<String> _availableSymbols = [];
+  List<Map<String, String>> _availableSymbols = [];
   List<String> _roomList = [];
   bool _loading = true;
   Map<String, bool> _expandedRooms = {};
@@ -47,6 +50,12 @@ class _DevicesPageState extends State<DevicesPage> {
     super.initState();
     _setupDevicesListener();
     _fetchAvailableSymbols();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _environmentId = ref.read(currentEnvironmentProvider);
   }
 
   @override
@@ -115,34 +124,63 @@ class _DevicesPageState extends State<DevicesPage> {
 
   /// 🔥 Fetch available symbols
   void _fetchAvailableSymbols() async {
-    final usedSymbols = await _deviceService.getUsedSymbols();
-    final allSymbols = ["L1", "F1", "TV1", "C1", "MS1", "B1", "B2", "E1", "DB1", "K1", "R1", "BL1", "AC1", "GL1", "GD1"];
-
-    setState(() {
-      _availableSymbols = allSymbols.where((symbol) => !usedSymbols.contains(symbol)).toList();
-    });
+    try {
+      final symbolsWithNames = await _deviceService.getAvailableSymbolsWithNames();
+      if (mounted) {
+        setState(() {
+          _availableSymbols = symbolsWithNames;
+        });
+      }
+    } catch (e) {
+      print('Error fetching available symbols: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching available symbols: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   IconData _getDeviceIcon(String symbol) {
+    // Extract the prefix (remove numbers)
     String prefix = symbol.replaceAll(RegExp(r'[0-9]'), '');
+    
+    // If the prefix is empty or not found in the map, return default icon
+    if (prefix.isEmpty) {
+      return Icons.devices_other;
+    }
+    
     return _deviceIcons[prefix] ?? Icons.devices_other;
   }
 
   void _showAddDeviceDialog() {
+    if (_environmentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an environment first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     String deviceName = "";
     String? selectedSymbol;
     String? selectedRoom;
     
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (stateContext, setDialogState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               title: Row(
                 children: [
-                  Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.add_circle, color: Theme.of(stateContext).colorScheme.primary),
                   const SizedBox(width: 12),
                   const Text("Add New Device", style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
@@ -162,72 +200,134 @@ class _DevicesPageState extends State<DevicesPage> {
                       onChanged: (value) => deviceName = value,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedSymbol,
-                      decoration: InputDecoration(
-                        labelText: "Device Type",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.category),
-                        filled: true,
+                    if (_availableSymbols.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'No available symbols. Please add symbols first.',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      )
+                    else
+                      DropdownButtonFormField<String>(
+                        value: selectedSymbol,
+                        decoration: InputDecoration(
+                          labelText: "Device Type",
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.category),
+                          filled: true,
+                        ),
+                        onChanged: (String? newValue) {
+                          setDialogState(() => selectedSymbol = newValue);
+                        },
+                        items: _availableSymbols
+                          .where((symbolData) => 
+                            symbolData['id'] != null && 
+                            symbolData['id']!.isNotEmpty)
+                          .map((symbolData) {
+                            final symbolId = symbolData['id']!;
+                            final symbolName = symbolData['name'] ?? symbolId;
+                            
+                            return DropdownMenuItem<String>(
+                              value: symbolId,
+                              child: Row(
+                                children: [
+                                  Icon(_getDeviceIcon(symbolId)),
+                                  const SizedBox(width: 12),
+                                  Text(symbolName),
+                                ],
+                              ),
+                            );
+                          })
+                          .toList(),
                       ),
-                      onChanged: (String? newValue) {
-                        setState(() => selectedSymbol = newValue);
-                      },
-                      items: _availableSymbols.map((String symbol) {
-                        return DropdownMenuItem<String>(
-                          value: symbol,
-                          child: Row(
-                            children: [
-                              Icon(_getDeviceIcon(symbol)),
-                              const SizedBox(width: 12),
-                              Text(symbol),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedRoom,
-                      decoration: InputDecoration(
-                        labelText: "Select Room",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.room_preferences),
-                        filled: true,
+                    if (_roomList.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'No rooms available. Device will be unassigned.',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      )
+                    else
+                      DropdownButtonFormField<String>(
+                        value: selectedRoom,
+                        decoration: InputDecoration(
+                          labelText: "Select Room",
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.room_preferences),
+                          filled: true,
+                        ),
+                        onChanged: (value) {
+                          setDialogState(() => selectedRoom = value);
+                        },
+                        items: _roomList.map((roomId) {
+                          return DropdownMenuItem<String>(
+                            value: roomId,
+                            child: Text(_devicesByRoom[roomId]["name"]),
+                          );
+                        }).toList(),
                       ),
-                      onChanged: (value) {
-                        setState(() => selectedRoom = value);
-                      },
-                      items: _roomList.map((roomId) {
-                        return DropdownMenuItem<String>(
-                          value: roomId,
-                          child: Text(_devicesByRoom[roomId]["name"]),
-                        );
-                      }).toList(),
-                    ),
                   ],
                 ),
               ),
               actions: [
-                TextButton.icon(
-                  icon: const Icon(Icons.close),
-                  label: const Text("Cancel"),
-                  onPressed: () => Navigator.pop(context),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text("Cancel"),
                 ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text("Add Device"),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (deviceName.isEmpty) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter a device name'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (selectedSymbol == null) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select a device type'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await _deviceService.addDevice(
+                        deviceName,
+                        selectedSymbol!,
+                        selectedRoom,
+                        environmentId: _environmentId!,
+                      );
+                      if (!mounted) return;
+                      Navigator.pop(dialogContext);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Device "$deviceName" added successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        SnackBar(
+                          content: Text('Error adding device: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
-                  onPressed: () {
-                    if (deviceName.isNotEmpty && selectedSymbol != null) {
-                      _deviceService.addDevice(deviceName, selectedSymbol!, selectedRoom);
-                      Navigator.pop(context);
-                      _setupDevicesListener();
-                    }
-                  },
+                  child: const Text("Add Device"),
                 ),
               ],
             );
@@ -317,6 +417,8 @@ class _DevicesPageState extends State<DevicesPage> {
                 onChanged: (bool newValue) async {
                   try {
                     await _switchService.updateDeviceState(deviceId, newValue);
+                    // Update the symbol source to "mobile"
+                    await _deviceService.updateSymbolSource(deviceData["assignedSymbol"], "mobile");
                     if (mounted) {
                       setState(() {
                         if (currentRoomId != null) {
@@ -374,7 +476,7 @@ class _DevicesPageState extends State<DevicesPage> {
         foregroundColor: theme.colorScheme.onBackground,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/admin/devices/add'),
+        onPressed: () => _showAddDeviceDialog(),
         backgroundColor: theme.colorScheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text("Add Device", style: TextStyle(color: Colors.white)),

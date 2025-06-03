@@ -90,9 +90,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             itemBuilder: (context, index) {
               final userId = users.keys.elementAt(index);
               final userData = users[userId] as Map<dynamic, dynamic>;
-              final userRole = userData['role'] as String;
-              final userName = userData['name'] as String;
-              final userEmail = userData['email'] as String;
+              final userRole = (userData['role'] as String?) ?? 'user';
+              final userName = (userData['name'] as String?) ?? 'Unknown User';
+              final userEmail = (userData['email'] as String?) ?? 'No email';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -100,7 +100,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   leading: CircleAvatar(
                     backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                     child: Text(
-                      userName[0].toUpperCase(),
+                      userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
