@@ -96,15 +96,11 @@
                         <h2><a href="#">System Architecture</a></h2>
                     </header>
                     <a href="#" class="image fit"><img src="images/system_architecture.jpg" alt="System Architecture" /></a>
-                    <p>The system leverages Edge Impulse's ML capabilities to classify gestures 
-                        locally on the ESP32, reducing latency and reliance on cloud processing. 
-                        Using MQTT as the primary communication protocol, the ESP32 efficiently 
-                        transmits gesture data to AWS IoT Core, ensuring seamless integration with 
-                        cloud services. AWS Lambda functions process incoming data and update Firebase, 
-                        enabling real-time synchronization with the Flutter frontend. The home automation 
-                        devices, such as smart locks, lights, and appliances, act as MQTT subscribers, 
-                        allowing immediate response to recognized gestures. This architecture ensures 
-                        a scalable, low-latency, and secure IoT ecosystem for home automation.</p>
+                    <p>The system runs tiny ML gesture classification locally on the ESP32 using Edge Impulse, enabling offline detection and low-latency control. 
+                        Detected gestures are published via MQTT to AWS IoT Core. AWS Lambda functions then update Firebase in real-time. For 
+                        frontend-initiated state changes, Firebase triggers a Google Cloud Function, which publishes updates to ESP32 without 
+                        feedback loops. Home automation devices subscribe to these MQTT topics for instant response. This event-driven, 
+                        serverless architecture ensures fast, secure, and scalable smart home control..</p>
                     <ul class="actions special">
                         <li><a href="generic.html" class="button">Explore</a></li>
                     </ul>
@@ -114,12 +110,13 @@
                         <h2><a href="#">Data Path</a></h2>
                     </header>
                     <a href="#" class="image fit"><img src="images/Gesture_Control.png" alt="Gesture Recognition" /></a>
-                    <p>The data flow begins with MPU6050 capturing motion data, which the ESP32 processes using 
-                        Edge Impulse's TinyML model to classify gestures. Once a valid gesture is detected, the ESP32 publishes 
-                        the processed data to an MQTT broker, where multiple subscribers, including AWS IoT Core and smart devices,
-                         receive updates. AWS IoT Core routes the data to an AWS Lambda function, which updates Firebase in real time. 
-                         The Flutter app listens for Firebase updates, ensuring UI synchronization with device states. Meanwhile, 
-                        smart devices subscribed to the MQTT broker react instantly, enabling responsive home automation.</p>
+                    <p>The data flow begins with MPU6050 capturing motion, which the ESP32 processes using Edge Impulse's TinyML model to 
+                        classify gestures. Before any gesture control, fingerprint authentication is required on the band, adding a layer 
+                        of user-specific security. Once authenticated and a valid gesture is detected, the ESP32 publishes data via MQTT. Smart 
+                        devices and AWS IoT Core subscribe to this topic. AWS IoT Core triggers a Lambda function to update Firebase, while
+                         Google Cloud Functions handle mobile-triggered updates by publishing to MQTT—avoiding feedback loops. Session timeouts 
+                         on ESP32 ensure access is revoked after inactivity. The Flutter app stays in sync via Firebase, and devices 
+                         react instantly to MQTT messages, achieving secure, low-latency home automation.</p>
                     <ul class="actions special">
                         <li><a href="generic.html" class="button">Learn More</a></li>
                     </ul>
@@ -136,19 +133,20 @@
                 <!-- Hardware Testing -->
                 <h3 style="text-align: left;">1. Hardware Testing</h3>
                 <p>• Verified gesture motion capture using MPU6050 & ESP32.</p>
-                <p>• Ensured high accuracy (>85%) in gesture recognition with Edge Impulse.</p>
+                <p>• Ensured high accuracy (>90%) in gesture recognition with Edge Impulse.</p>
                 <p>• Measured response time for real-time device control.</p>
             
                 <!-- Software Testing -->
                 <h3 style="text-align: left;">2. Software Testing</h3>
                 <p>• Used Flutter Fix to resolve UI issues and tested real-time Firebase synchronization.</p>
-                <p>• Validated MQTT communication using test clients, ensuring stable, low-latency messaging.</p>
+                <p>• Validated MQTT communication using aws mqtt test client, ensuring stable, low-latency messaging.</p>
                 <p>• Tested AWS Lambda function, confirming efficient data processing and Firebase updates.</p>
+                <p>• Tested the GCP Firebase Cloud Function to confirm that frontend inputs trigger the appropriate Firebase updates.</p>
             
                 <!-- Manual & Integration Tests -->
                 <h3 style="text-align: left;">3. Manual & Integration Tests</h3>
                 <p>• Performed 100+ gesture recognition tests to validate ML accuracy.</p>
-                <p>• Conducted end-to-end system tests, ensuring seamless interaction between ESP32, MQTT, AWS, Firebase, and Flutter.</p>
+                <p>• Conducted end-to-end system tests, ensuring seamless interaction between ESP32, MQTT, AWS, Firebase,GCP and Flutter.</p>
                 <p>• Tested network stability, multi-user scenarios, and smart device compatibility.</p>
             
                 <ul class="actions special">

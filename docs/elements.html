@@ -43,10 +43,17 @@
                 <!-- System Architecture -->
                 <h2>System Architecture</h2>
                 <p>The system integrates hardware and software components for efficient data capture, processing, and execution of smart device commands:</p>
-                <ul>
-                    <li>The MPU6050 sensor captures motion data from wrist movements.</li>
-                    <li>Data is processed by the ESP32 microcontroller using the Edge Impulse ML model.</li>
-                    <li>Recognized gestures are sent as MQTT commands to AWS IoT Core, which triggers actions on connected devices like lights, sockets, and door locks.</li>
+                <ul><li>Fingerprint authentication on the ESP32 unlocks gesture control, enhancing security.</li>  
+                    <li>The MPU6050 sensor captures motion data from wrist movements on the wearable.</li> 
+                    <li>A session timeout mechanism ensures automatic lockout after inactivity.</li> 
+                    <li>Motion data is processed locally using an Edge Impulse TinyML model on the ESP32 to classify gestures.</li>
+                    <li>Recognized gestures are published as MQTT messages to AWS IoT Core.</li>
+                    <li>Smart home devices (lights, locks, sockets) subscribed to MQTT topics respond instantly to gestures.</li> 
+                    <li>AWS IoT Core triggers AWS Lambda functions which update Firebase with new device states.</li> 
+                    <li>The Flutter mobile app listens to Firebase in real time to reflect device status updates in the UI.</li> 
+                    <li>User-triggered actions from the mobile app update Firebase directly (e.g., toggle light).</li> 
+                    <li>Google Cloud Functions detect these Firebase updates and publish corresponding MQTT messages back to IoT Core.</li>
+                    <li>This ensures mobile commands reach the smart devices via the same MQTT pipeline without loops or conflicts.</li> 
                 </ul>
 
                 <!-- Key Features -->
@@ -69,7 +76,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>ESP32 (NodeMCU)</td>
+                            <td>ESP32 Dev Module</td>
                             <td>Processes sensor data, runs the Edge Impulse ML model, and communicates with AWS IoT Core via MQTT.</td>
                         </tr>
                         <tr>
@@ -77,12 +84,16 @@
                             <td>Captures precise motion data for gesture recognition.</td>
                         </tr>
                         <tr>
-                            <td>Fingerprint Scanner</td>
+                            <td>Finger Print Door lock</td>
                             <td>Enables secure fingerprint-based door unlocking.</td>
                         </tr>
                         <tr>
                             <td>Smart Sockets & Light Modules</td>
                             <td>Controlled via ESP32 to automate appliances and lighting based on gesture commands.</td>
+                        </tr>
+                        <tr>
+                            <td>Fingerprint scanner R502</td>
+                            <td>Authenticate the user by fingerprint in the wrist band.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -117,6 +128,10 @@
                             <td>Flutter Mobile App</td>
                             <td>Displays real-time device status, logs, and gesture configuration settings.</td>
                         </tr>
+                        <tr>
+                            <td>GCP Function</td>
+                            <td>Catch the firebase triggers done by mobile app and publish them to IOT core.</td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -143,16 +158,16 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>ESP32 Board</td>
+                            <td>Speed Xiao ESP32 Board</td>
                             <td>1</td>
-                            <td>1,000</td>
-                            <td>1,000</td>
+                            <td>3,200</td>
+                            <td>3,200</td>
                         </tr>
                         <tr>
-                            <td>NodeMCU Development Board</td>
+                            <td>esp32 dev module Board</td>
                             <td>4</td>
-                            <td>600</td>
                             <td>2,400</td>
+                            <td>9,600</td>
                         </tr>
                         <tr>
                             <td>IMU Sensor</td>
@@ -161,10 +176,10 @@
                             <td>1,000</td>
                         </tr>
                         <tr>
-                            <td>IR Sensors</td>
-                            <td>3</td>
-                            <td>300</td>
-                            <td>900</td>
+                            <td>R502 Finger Print Sensors</td>
+                            <td>1</td>
+                            <td>6,300</td>
+                            <td>6,300</td>
                         </tr>
                         <tr>
                             <td>Battery Pack</td>
@@ -209,16 +224,16 @@
                             <td>2,000</td>
                         </tr>
                         <tr>
-                            <td>Flexible PCB for Wearable Band (with Circuit Components)</td>
+                            <td>Flexible 3d print model as Wearable Band</td>
                             <td>1</td>
-                            <td>10,000</td>
-                            <td>10,000</td>
+                            <td>1,800</td>
+                            <td>1,800</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="3"><strong>Total</strong></td>
-                            <td><strong>26,400</strong></td>
+                            <td><strong>33,000</strong></td>
                         </tr>
                     </tfoot>
                 </table>
