@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../services/auth_service.dart';
-import '../../../../styles/styles.dart';
 import '../../../../helpers/utils.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 

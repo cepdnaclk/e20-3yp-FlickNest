@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../styles/colors.dart';
 
 class CreateEnvironmentPage extends ConsumerStatefulWidget {
   static const String route = '/create-environment';
@@ -259,9 +260,7 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
   }
 
   bool get _canSubmit {
-    return !_isLoading &&
-      _nameController.text.trim().length >= 3 &&
-      (_coAdminId != null || _selectedUserIds.isNotEmpty);
+    return !_isLoading && _nameController.text.trim().length >= 3;
   }
 
   @override
@@ -279,213 +278,349 @@ class _CreateEnvironmentPageState extends ConsumerState<CreateEnvironmentPage> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // Admin Info
-            Card(
-              child: Padding(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section with Environment Name
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.domain,
+                        size: 48,
+                        color: HomeAutomationColors.darkPrimary,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Environment Name',
+                          hintText: 'Enter a descriptive name',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white10,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter an environment name';
+                          }
+                          if (value.length < 3) {
+                            return 'Environment name must be at least 3 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Environment Admin',
-                      style: TextStyle(
-                        fontSize: 16,
+                    // Admin Info Card
+                    Card(
+                      elevation: 0,
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Environment Admin',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                child: const Icon(Icons.admin_panel_settings, color: Colors.white),
+                              ),
+                              title: Text(_currentUserName ?? 'Loading...'),
+                              subtitle: Text(_currentUserEmail ?? 'Loading...'),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'Admin',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Co-Admin Section
+                    Text(
+                      'Select Co-Admin',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        child: const Icon(Icons.admin_panel_settings, color: Colors.white),
+                    const SizedBox(height: 12),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        ),
                       ),
-                      title: Text(_currentUserName ?? 'Loading...'),
-                      subtitle: Text(_currentUserEmail ?? 'Loading...'),
-                      trailing: const Chip(
-                        label: Text('Admin'),
-                        backgroundColor: Colors.blue,
-                        labelStyle: TextStyle(color: Colors.white),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _coAdminController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Co-Admin Email',
+                                      hintText: 'Search by email',
+                                      border: const OutlineInputBorder(),
+                                      prefixIcon: const Icon(Icons.person_search),
+                                      suffixIcon: _coAdminId != null
+                                          ? IconButton(
+                                              icon: const Icon(Icons.close),
+                                              onPressed: _removeCoAdmin,
+                                            )
+                                          : null,
+                                    ),
+                                    onChanged: _onCoAdminChanged,
+                                    readOnly: _coAdminId != null,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: (_coAdminController.text.trim().isEmpty || _coAdminId != null)
+                                      ? null
+                                      : _onCoAdminSearchButton,
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                    padding: EdgeInsets.zero,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Icon(Icons.search),
+                                ),
+                              ],
+                            ),
+                            if (_coAdminId != null && _coAdminUser != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.security, color: Colors.teal, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          _coAdminUser!['email'] ?? '',
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close, size: 20),
+                                        onPressed: _removeCoAdmin,
+                                        color: Colors.teal,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
+                    if (_coAdminSuggestions.isNotEmpty && _coAdminId == null)
+                      Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.only(top: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(
+                            color: Theme.of(context).dividerColor.withOpacity(0.2),
+                          ),
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _coAdminSuggestions.length,
+                          itemBuilder: (context, index) {
+                            final user = _coAdminSuggestions[index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.teal.withOpacity(0.1),
+                                child: const Icon(Icons.person_outline, color: Colors.teal, size: 20),
+                              ),
+                              title: Text(user['name'] ?? 'Anonymous'),
+                              subtitle: Text(user['email'] ?? ''),
+                              onTap: () => _selectCoAdmin(user),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+
+                    // Users Section
+                    Text(
+                      'Add Users',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: Theme.of(context).dividerColor.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _userController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'User Email',
+                                      hintText: 'Search by email',
+                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icon(Icons.person_add_alt_1),
+                                    ),
+                                    onChanged: _onUserChanged,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: _userController.text.trim().isEmpty
+                                      ? null
+                                      : _onUserSearchButton,
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                    padding: EdgeInsets.zero,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Icon(Icons.search),
+                                ),
+                              ],
+                            ),
+                            if (_selectedUserIds.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Column(
+                                  children: _selectedUserIds.map((userId) {
+                                    final user = _selectedUsers[userId]!;
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.person_outline, color: Colors.grey, size: 20),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              user['email'] ?? '',
+                                              style: const TextStyle(fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.close, size: 20),
+                                            onPressed: () => _removeUser(userId),
+                                            color: Colors.grey,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_userSuggestions.isNotEmpty)
+                      Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.only(top: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(
+                            color: Theme.of(context).dividerColor.withOpacity(0.2),
+                          ),
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _userSuggestions.length,
+                          itemBuilder: (context, index) {
+                            final user = _userSuggestions[index];
+                            final userId = user['id'] as String;
+                            final alreadySelected = _selectedUserIds.contains(userId) || userId == _coAdminId;
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.grey.withOpacity(0.1),
+                                child: const Icon(Icons.person_outline, color: Colors.grey, size: 20),
+                              ),
+                              title: Text(user['name'] ?? 'Anonymous'),
+                              subtitle: Text(user['email'] ?? ''),
+                              enabled: !alreadySelected,
+                              onTap: alreadySelected ? null : () => _addUser(user),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Environment Name
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Environment Name',
-                hintText: 'Enter a descriptive name for your environment',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.domain),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter an environment name';
-                }
-                if (value.length < 3) {
-                  return 'Environment name must be at least 3 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            // Co-Admin Selection
-            const Text(
-              'Select Co-Admin (by email)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _coAdminController,
-                        decoration: InputDecoration(
-                          labelText: 'Co-Admin Email',
-                          hintText: 'Type to search users by email',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.person_search),
-                          suffixIcon: _coAdminId != null
-                              ? IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: _removeCoAdmin,
-                                )
-                              : null,
-                        ),
-                        onChanged: _onCoAdminChanged,
-                        readOnly: _coAdminId != null,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: (_coAdminController.text.trim().isEmpty || _coAdminId != null)
-                          ? null
-                          : _onCoAdminSearchButton,
-                      child: const Icon(Icons.search),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ),
-                if (_coAdminId != null && _coAdminUser != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Wrap(
-                      spacing: 8,
-                      children: [
-                        InputChip(
-                          label: Text(_coAdminUser!['email'] ?? ''),
-                          avatar: const Icon(Icons.admin_panel_settings, size: 20),
-                          onDeleted: _removeCoAdmin,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            if (_coAdminSuggestions.isNotEmpty && _coAdminId == null)
-              Card(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _coAdminSuggestions.length,
-                  itemBuilder: (context, index) {
-                    final user = _coAdminSuggestions[index];
-                    return ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: Text(user['name'] ?? 'Anonymous'),
-                      subtitle: Text(user['email'] ?? ''),
-                      onTap: () => _selectCoAdmin(user),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 24),
-            // Users Selection
-            const Text(
-              'Add Users (by email)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _userController,
-                        decoration: InputDecoration(
-                          labelText: 'User Email',
-                          hintText: 'Type to search users by email',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.person_add_alt_1),
-                        ),
-                        onChanged: _onUserChanged,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _userController.text.trim().isEmpty
-                          ? null
-                          : _onUserSearchButton,
-                      child: const Icon(Icons.search),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ),
-                if (_selectedUserIds.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Wrap(
-                      spacing: 8,
-                      children: _selectedUserIds.map((userId) {
-                        final user = _selectedUsers[userId]!;
-                        return InputChip(
-                          label: Text(user['email'] ?? ''),
-                          avatar: const Icon(Icons.person, size: 20),
-                          onDeleted: () => _removeUser(userId),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-              ],
-            ),
-            if (_userSuggestions.isNotEmpty)
-              Card(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _userSuggestions.length,
-                  itemBuilder: (context, index) {
-                    final user = _userSuggestions[index];
-                    final userId = user['id'] as String;
-                    final alreadySelected = _selectedUserIds.contains(userId) || userId == _coAdminId;
-                    return ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: Text(user['name'] ?? 'Anonymous'),
-                      subtitle: Text(user['email'] ?? ''),
-                      enabled: !alreadySelected,
-                      onTap: alreadySelected ? null : () => _addUser(user),
-                    );
-                  },
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-} 
+}

@@ -3,6 +3,8 @@ import 'package:flicknest_flutter_frontend/providers/environment/environment_pro
 import '../../../../main.dart' show themeNotifier;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:go_router/go_router.dart';
+import '../../../environments/presentation/pages/create_environment.dart';
 import 'settings_profile_section.dart';
 import 'settings_environment_section.dart';
 import 'settings_appearance_section.dart';
@@ -75,56 +77,124 @@ class HomeAutomationAppBar extends ConsumerWidget implements PreferredSizeWidget
   Widget build(BuildContext context, WidgetRef ref) {
     final envId = ref.watch(currentEnvironmentProvider);
     final userId = ref.watch(currentUserIdProvider);
+    final environmentsAsync = ref.watch(userEnvironmentsProvider);
     final envAsync = ref.watch(firebaseEnvProvider(envId ?? ''));
 
-    return envAsync.when(
-      loading: () => AppBar(title: const Text('Flick Nest')),
-      error: (e, _) => AppBar(title: const Text('Flick Nest')),
-      data: (envData) {
-        final user = envData['users'][userId];
-        return AppBar(
-          title: const Text('Flick Nest'),
-          actions: [
-            if (user != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: user['photoUrl'] != null
-                          ? NetworkImage(user['photoUrl'])
-                          : null,
-                      child: user['photoUrl'] == null
-                          ? Text(user['name'][0])
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    _roleBadge(user['role']),
-                  ],
-                ),
+    return AppBar(
+      title: environmentsAsync.when(
+        loading: () => const Text('Flick Nest'),
+        error: (e, _) => const Text('Flick Nest'),
+        data: (environments) {
+          final currentEnv = environments[envId];
+          return Text(currentEnv?['name'] ?? 'Flick Nest');
+        },
+      ),
+      actions: [
+        envAsync.when(
+          loading: () => const SizedBox(),
+          error: (e, _) => const SizedBox(),
+          data: (envData) {
+            final user = envData['users'][userId];
+            if (user == null) return const SizedBox();
+            return Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: user['photoUrl'] != null
+                        ? NetworkImage(user['photoUrl'])
+                        : null,
+                    child: user['photoUrl'] == null
+                        ? Text(user['name'][0])
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  _getRoleIcon(user['role']),
+                ],
               ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _roleBadge(String role) {
+  Widget _getRoleIcon(String role) {
     switch (role) {
       case 'admin':
         return Tooltip(
           message: 'Admin',
-          child: Icon(Icons.verified, color: Colors.red, size: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.verified, color: Colors.red, size: 16),
+                SizedBox(width: 4),
+                Text('Admin',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       case 'co-admin':
         return Tooltip(
           message: 'Co-Admin',
-          child: Icon(Icons.verified_user, color: Colors.blue, size: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.verified_user, color: Colors.blue, size: 16),
+                SizedBox(width: 4),
+                Text('Co-Admin',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       default:
         return Tooltip(
           message: 'User',
-          child: Icon(Icons.person, color: Colors.grey, size: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.person, color: Colors.grey, size: 16),
+                SizedBox(width: 4),
+                Text('User',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
     }
   }

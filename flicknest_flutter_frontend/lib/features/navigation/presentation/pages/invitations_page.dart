@@ -50,9 +50,16 @@ class _InvitationsPageState extends State<InvitationsPage> {
   void _acceptInvitation(String invitationId) async {
     if (currentUser == null) return;
     
+    // Remove invitation from UI immediately
+    final invitationIndex = invitations.indexWhere((inv) => inv['id'] == invitationId);
+    if (invitationIndex == -1) return;
+
+    final invitation = invitations[invitationIndex];
+    setState(() {
+      invitations.removeAt(invitationIndex);
+    });
+
     try {
-      setState(() => isLoading = true);
-      
       // Get the invitation data
       final invitationRef = FirebaseDatabase.instance.ref('users/${currentUser!.uid}/invitations/$invitationId');
       final snapshot = await invitationRef.get();
@@ -82,9 +89,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
       // Delete the invitation
       await invitationRef.remove();
       
-      // Refresh invitations list
-      await _fetchInvitations();
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -97,6 +101,10 @@ class _InvitationsPageState extends State<InvitationsPage> {
       }
     } catch (e) {
       if (mounted) {
+        // Revert the UI change if there was an error
+        setState(() {
+          invitations.insert(invitationIndex, invitation);
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to accept invitation: $e'),
@@ -104,26 +112,26 @@ class _InvitationsPageState extends State<InvitationsPage> {
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
     }
   }
 
   void _declineInvitation(String invitationId) async {
     if (currentUser == null) return;
     
+    // Remove invitation from UI immediately
+    final invitationIndex = invitations.indexWhere((inv) => inv['id'] == invitationId);
+    if (invitationIndex == -1) return;
+
+    final invitation = invitations[invitationIndex];
+    setState(() {
+      invitations.removeAt(invitationIndex);
+    });
+
     try {
-      setState(() => isLoading = true);
-      
       // Simply delete the invitation
       await FirebaseDatabase.instance
         .ref('users/${currentUser!.uid}/invitations/$invitationId')
         .remove();
-      
-      // Refresh invitations list
-      await _fetchInvitations();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,16 +143,16 @@ class _InvitationsPageState extends State<InvitationsPage> {
       }
     } catch (e) {
       if (mounted) {
+        // Revert the UI change if there was an error
+        setState(() {
+          invitations.insert(invitationIndex, invitation);
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to decline invitation: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
       }
     }
   }
@@ -160,55 +168,72 @@ class _InvitationsPageState extends State<InvitationsPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.colorScheme.primary.withAlpha(13),
+              theme.colorScheme.primaryContainer.withOpacity(0.2),
               theme.colorScheme.surface,
             ],
+            stops: const [0.0, 0.8],
           ),
         ),
         child: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              )
             : invitations.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.mail_outline,
-                          size: 64,
-                          color: theme.colorScheme.primary.withAlpha(128),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.mail_outline,
+                            size: 48,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         Text(
                           'No Invitations',
-                          style: theme.textTheme.headlineSmall,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'You have no pending invitations',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.textTheme.bodySmall?.color,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
                     itemCount: invitations.length,
                     itemBuilder: (context, index) {
                       final inv = invitations[index];
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         child: Card(
-                          elevation: 2,
+                          elevation: 4,
+                          shadowColor: theme.colorScheme.shadow.withOpacity(0.2),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             side: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha(26),
+                              color: theme.colorScheme.outline.withOpacity(0.1),
                             ),
                           ),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             onTap: () {
                               context.push(
                                 '/invitation-details',
@@ -216,7 +241,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
                               );
                             },
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -225,14 +250,22 @@ class _InvitationsPageState extends State<InvitationsPage> {
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary.withAlpha(12),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: theme.colorScheme.primary.withOpacity(0.1),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                         ),
                                         child: Icon(
                                           inv['role'] == 'co-admin' 
                                               ? Icons.admin_panel_settings
                                               : Icons.person_outline,
                                           color: theme.colorScheme.primary,
+                                          size: 28,
                                         ),
                                       ),
                                       const SizedBox(width: 16),
@@ -243,14 +276,26 @@ class _InvitationsPageState extends State<InvitationsPage> {
                                             Text(
                                               inv['environmentName'] ?? 'Unknown Environment',
                                               style: theme.textTheme.titleMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w600,
+                                                color: theme.colorScheme.onSurface,
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Role: ${inv['role'] ?? ''}',
-                                              style: theme.textTheme.bodyMedium?.copyWith(
-                                                color: theme.textTheme.bodySmall?.color,
+                                            const SizedBox(height: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                'Role: ${inv['role'] ?? ''}',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.primary,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -258,7 +303,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 20),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
@@ -266,10 +311,21 @@ class _InvitationsPageState extends State<InvitationsPage> {
                                         onPressed: () => _declineInvitation(inv['id']),
                                         style: OutlinedButton.styleFrom(
                                           foregroundColor: theme.colorScheme.error,
-                                          side: BorderSide(color: theme.colorScheme.error),
-                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                          side: BorderSide(
+                                            color: theme.colorScheme.error.withOpacity(0.5),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
                                         ),
-                                        child: const Text('Decline'),
+                                        child: Text(
+                                          'Decline',
+                                          style: theme.textTheme.labelLarge,
+                                        ),
                                       ),
                                       const SizedBox(width: 12),
                                       ElevatedButton(
@@ -277,9 +333,22 @@ class _InvitationsPageState extends State<InvitationsPage> {
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: theme.colorScheme.primary,
                                           foregroundColor: theme.colorScheme.onPrimary,
-                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 12,
+                                          ),
+                                          elevation: 2,
+                                          shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
                                         ),
-                                        child: const Text('Accept'),
+                                        child: Text(
+                                          'Accept',
+                                          style: theme.textTheme.labelLarge?.copyWith(
+                                            color: theme.colorScheme.onPrimary,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -295,4 +364,5 @@ class _InvitationsPageState extends State<InvitationsPage> {
       bottomNavigationBar: const HomeAutomationBottomBar(),
     );
   }
-} 
+}
+

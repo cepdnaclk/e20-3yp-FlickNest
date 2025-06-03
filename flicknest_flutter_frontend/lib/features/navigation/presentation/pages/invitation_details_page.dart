@@ -109,12 +109,14 @@ class InvitationDetailsPage extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.colorScheme.primary.withAlpha(13),
+              theme.colorScheme.primaryContainer.withOpacity(0.2),
               theme.colorScheme.surface,
             ],
+            stops: const [0.0, 0.8],
           ),
         ),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -123,15 +125,16 @@ class InvitationDetailsPage extends StatelessWidget {
                 children: [
                   // Header Card
                   Card(
-                    elevation: 2,
+                    elevation: 4,
+                    shadowColor: theme.colorScheme.shadow.withOpacity(0.2),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: theme.colorScheme.outline.withAlpha(26),
+                        color: theme.colorScheme.outline.withOpacity(0.1),
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -140,8 +143,15 @@ class InvitationDetailsPage extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withAlpha(26),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.colorScheme.primary.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Icon(
                                   inv['role'] == 'co-admin' 
@@ -159,15 +169,16 @@ class InvitationDetailsPage extends StatelessWidget {
                                     Text(
                                       inv['environmentName'] ?? 'Unknown Environment',
                                       style: theme.textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.onSurface,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary.withAlpha(26),
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         inv['role'] ?? '',
@@ -190,25 +201,27 @@ class InvitationDetailsPage extends StatelessWidget {
                   
                   // Details Card
                   Card(
-                    elevation: 2,
+                    elevation: 4,
+                    shadowColor: theme.colorScheme.shadow.withOpacity(0.2),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: theme.colorScheme.outline.withAlpha(26),
+                        color: theme.colorScheme.outline.withOpacity(0.1),
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Invitation Details',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildDetailRow(
                             context,
                             'Invited by',
@@ -216,7 +229,7 @@ class InvitationDetailsPage extends StatelessWidget {
                             Icons.person_outline,
                           ),
                           if (inv['timestamp'] != null) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             _buildDetailRow(
                               context,
                               'Sent at',
@@ -232,8 +245,8 @@ class InvitationDetailsPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  
+                  const SizedBox(height: 40),
+
                   // Action Buttons
                   Row(
                     children: [
@@ -242,13 +255,16 @@ class InvitationDetailsPage extends StatelessWidget {
                           onPressed: () => _declineInvitation(context, inv),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.colorScheme.error,
-                            side: BorderSide(color: theme.colorScheme.error),
+                            side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text('Decline'),
+                          child: Text(
+                            'Decline',
+                            style: theme.textTheme.labelLarge,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -259,12 +275,18 @@ class InvitationDetailsPage extends StatelessWidget {
                             backgroundColor: theme.colorScheme.primary,
                             foregroundColor: theme.colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
+                            elevation: 2,
+                            shadowColor: theme.colorScheme.primary.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Text('Accept'),
+                          child: Text(
+                            'Accept',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -284,10 +306,17 @@ class InvitationDetailsPage extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha(26),
-            borderRadius: BorderRadius.circular(8),
+            color: theme.colorScheme.primaryContainer.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Icon(
             icon,
@@ -295,7 +324,7 @@ class InvitationDetailsPage extends StatelessWidget {
             color: theme.colorScheme.primary,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,13 +332,15 @@ class InvitationDetailsPage extends StatelessWidget {
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 value,
-                style: theme.textTheme.bodyLarge,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -317,4 +348,5 @@ class InvitationDetailsPage extends StatelessWidget {
       ],
     );
   }
-} 
+}
+
