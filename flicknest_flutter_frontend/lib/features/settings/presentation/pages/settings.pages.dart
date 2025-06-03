@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../styles/styles.dart';
-import '../../../profile/presentation/pages/profile.page.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../helpers/theme_notifier.dart';
 import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
 import '../../../../main.dart' show themeNotifier;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../environments/presentation/pages/create_environment.dart';
-import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
-import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitation_details_page.dart';
 import 'settings_profile_section.dart';
 import 'settings_environment_section.dart';
 import 'settings_appearance_section.dart';

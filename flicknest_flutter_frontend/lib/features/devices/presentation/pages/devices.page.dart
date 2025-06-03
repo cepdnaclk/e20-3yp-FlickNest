@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../Firebase/switchModel.dart';
 import '../../../../Firebase/deviceService.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 
 class DevicesPage extends StatefulWidget {
   static const String route = '/devices';
@@ -14,6 +15,7 @@ class DevicesPage extends StatefulWidget {
 class _DevicesPageState extends State<DevicesPage> {
   final SwitchService _switchService = SwitchService();
   final DeviceService _deviceService = DeviceService();
+  StreamSubscription? _devicesSubscription;
 
   Map<String, dynamic> _devicesByRoom = {};
   List<String> _availableSymbols = [];
@@ -43,57 +45,68 @@ class _DevicesPageState extends State<DevicesPage> {
   @override
   void initState() {
     super.initState();
-    _fetchDevices();
+    _setupDevicesListener();
     _fetchAvailableSymbols();
   }
 
-  /// 🔥 Fetch devices
-  void _fetchDevices() async {
+  @override
+  void dispose() {
+    _devicesSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// 🔥 Setup real-time devices listener
+  void _setupDevicesListener() {
     setState(() => _loading = true);
     
     try {
       final devicesDataStream = _switchService.getDevicesByRoomStream();
-      final devicesData = await devicesDataStream.first;
+      _devicesSubscription = devicesDataStream.listen((devicesData) {
+        if (mounted) {
+          final Map<String, dynamic> processedDevices = {};
+          final List<Map<String, dynamic>> unassignedDevs = [];
 
-      if (mounted) {
-        final Map<String, dynamic> processedDevices = {};
-        final List<Map<String, dynamic>> unassignedDevs = [];
-
-        // Process devices and organize by room
-        devicesData.forEach((roomId, roomData) {
-          if (roomId == 'unassigned' || roomData['devices'] == null) {
-            if (roomData['devices'] != null) {
-              final devices = Map<String, dynamic>.from(roomData['devices']);
-              devices.forEach((deviceId, deviceData) {
-                unassignedDevs.add({
-                  'id': deviceId,
-                  ...Map<String, dynamic>.from(deviceData),
+          // Process devices and organize by room
+          devicesData.forEach((roomId, roomData) {
+            if (roomId == 'unassigned' || roomData['devices'] == null) {
+              if (roomData['devices'] != null) {
+                final devices = Map<String, dynamic>.from(roomData['devices']);
+                devices.forEach((deviceId, deviceData) {
+                  unassignedDevs.add({
+                    'id': deviceId,
+                    ...Map<String, dynamic>.from(deviceData),
+                  });
                 });
-              });
+              }
+            } else {
+              processedDevices[roomId] = {
+                'name': roomData['name'],
+                'devices': Map<String, dynamic>.from(roomData['devices'] ?? {}),
+              };
             }
-          } else {
-            processedDevices[roomId] = {
-              'name': roomData['name'],
-              'devices': Map<String, dynamic>.from(roomData['devices'] ?? {}),
-            };
-          }
-        });
+          });
 
-        setState(() {
-          _devicesByRoom = processedDevices;
-          _roomList = processedDevices.keys.toList();
-          _unassignedDevices = unassignedDevs;
-          
-          // Initialize expanded state for new rooms
-          for (var roomId in _roomList) {
-            _expandedRooms.putIfAbsent(roomId, () => true);
-          }
-          
-          _loading = false;
-        });
-      }
+          setState(() {
+            _devicesByRoom = processedDevices;
+            _roomList = processedDevices.keys.toList();
+            _unassignedDevices = unassignedDevs;
+            
+            // Initialize expanded state for new rooms
+            for (var roomId in _roomList) {
+              _expandedRooms.putIfAbsent(roomId, () => true);
+            }
+            
+            _loading = false;
+          });
+        }
+      }, onError: (error) {
+        print('Error in devices stream: $error');
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+      });
     } catch (e) {
-      print('Error fetching devices: $e');
+      print('Error setting up devices listener: $e');
       if (mounted) {
         setState(() => _loading = false);
       }
@@ -212,7 +225,7 @@ class _DevicesPageState extends State<DevicesPage> {
                     if (deviceName.isNotEmpty && selectedSymbol != null) {
                       _deviceService.addDevice(deviceName, selectedSymbol!, selectedRoom);
                       Navigator.pop(context);
-                      _fetchDevices();
+                      _setupDevicesListener();
                     }
                   },
                 ),
@@ -259,7 +272,7 @@ class _DevicesPageState extends State<DevicesPage> {
     } catch (e) {
       print('Error moving device: $e');
       // Revert changes on error
-      _fetchDevices();
+      _setupDevicesListener();
     }
   }
 

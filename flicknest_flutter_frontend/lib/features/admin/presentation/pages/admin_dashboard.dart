@@ -4,6 +4,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
+import 'package:flicknest_flutter_frontend/providers/auth/auth_provider.dart';
+import 'manage_users.page.dart';
 
 // Provider for stats stream
 final statsStreamProvider = StreamProvider<DatabaseEvent>((ref) {
@@ -13,6 +15,15 @@ final statsStreamProvider = StreamProvider<DatabaseEvent>((ref) {
     return FirebaseDatabase.instance.ref('environments/$envId').onValue;
   }
   throw Exception('No user logged in or no environment selected');
+});
+
+final environmentUsersStreamProvider = StreamProvider.autoDispose<DatabaseEvent>((ref) {
+  final envId = ref.watch(currentEnvironmentProvider);
+  final user = ref.watch(currentAuthUserProvider).value;
+  // ...
+  return FirebaseDatabase.instance
+      .ref('environments/$envId/users')
+      .onValue;
 });
 
 class AdminDashboard extends ConsumerWidget {
@@ -343,7 +354,7 @@ class AdminDashboard extends ConsumerWidget {
                   'User\nManagement',
                   Icons.people,
                   Colors.amber,
-                  () => context.push('/admin/users'),
+                  () => context.push(ManageUsersPage.route),
                 ),
                 _buildManagementCard(
                   theme,
