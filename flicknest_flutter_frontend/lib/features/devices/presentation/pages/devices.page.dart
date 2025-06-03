@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../Firebase/switchModel.dart';
 import '../../../../Firebase/deviceService.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/environment/environment_provider.dart';
@@ -15,7 +14,7 @@ class DevicesPage extends ConsumerStatefulWidget {
 }
 
 class _DevicesPageState extends ConsumerState<DevicesPage> {
-  final SwitchService _switchService = SwitchService();
+  late final SwitchService _switchService;
   final DeviceService _deviceService = DeviceService();
   StreamSubscription? _devicesSubscription;
   String? _environmentId;
@@ -48,6 +47,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   @override
   void initState() {
     super.initState();
+    final envId = ref.read(currentEnvironmentProvider);
+    _switchService = SwitchService(envId ?? '');
     _setupDevicesListener();
     _fetchAvailableSymbols();
   }
@@ -67,7 +68,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   /// 🔥 Setup real-time devices listener
   void _setupDevicesListener() {
     setState(() => _loading = true);
-    
+
     try {
       final devicesDataStream = _switchService.getDevicesByRoomStream();
       _devicesSubscription = devicesDataStream.listen((devicesData) {
@@ -99,12 +100,12 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
             _devicesByRoom = processedDevices;
             _roomList = processedDevices.keys.toList();
             _unassignedDevices = unassignedDevs;
-            
+
             // Initialize expanded state for new rooms
             for (var roomId in _roomList) {
               _expandedRooms.putIfAbsent(roomId, () => true);
             }
-            
+
             _loading = false;
           });
         }
@@ -147,12 +148,12 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   IconData _getDeviceIcon(String symbol) {
     // Extract the prefix (remove numbers)
     String prefix = symbol.replaceAll(RegExp(r'[0-9]'), '');
-    
+
     // If the prefix is empty or not found in the map, return default icon
     if (prefix.isEmpty) {
       return Icons.devices_other;
     }
-    
+
     return _deviceIcons[prefix] ?? Icons.devices_other;
   }
 
@@ -170,7 +171,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     String deviceName = "";
     String? selectedSymbol;
     String? selectedRoom;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -221,13 +222,13 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                           setDialogState(() => selectedSymbol = newValue);
                         },
                         items: _availableSymbols
-                          .where((symbolData) => 
-                            symbolData['id'] != null && 
+                          .where((symbolData) =>
+                            symbolData['id'] != null &&
                             symbolData['id']!.isNotEmpty)
                           .map((symbolData) {
                             final symbolId = symbolData['id']!;
                             final symbolName = symbolData['name'] ?? symbolId;
-                            
+
                             return DropdownMenuItem<String>(
                               value: symbolId,
                               child: Row(
@@ -386,16 +387,16 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Card(
         elevation: 0,
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: deviceState 
+            backgroundColor: deviceState
                 ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceVariant,
+                : theme.colorScheme.surfaceContainerHighest,
             child: Icon(
               _getDeviceIcon(symbol),
-              color: deviceState 
+              color: deviceState
                   ? theme.colorScheme.onPrimary
                   : theme.colorScheme.onSurfaceVariant,
             ),
@@ -404,7 +405,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
           subtitle: Text(
             deviceState ? "On" : "Off",
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: deviceState 
+              color: deviceState
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurfaceVariant,
             ),
@@ -467,13 +468,13 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Smart Home"),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddDeviceDialog(),
@@ -646,3 +647,5 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     );
   }
 }
+
+

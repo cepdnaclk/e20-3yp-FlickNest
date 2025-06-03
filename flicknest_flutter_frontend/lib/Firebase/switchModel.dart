@@ -1,8 +1,11 @@
 import 'package:firebase_database/firebase_database.dart';
 
 class SwitchService {
-  final DatabaseReference _devicesRef = FirebaseDatabase.instance.ref("environments/env_12345/devices");
-  final DatabaseReference _symbolsRef = FirebaseDatabase.instance.ref("symbols");
+  final String environmentId;
+  SwitchService(this.environmentId);
+
+  DatabaseReference get _devicesRef => FirebaseDatabase.instance.ref("environments/$environmentId/devices");
+  DatabaseReference get _symbolsRef => FirebaseDatabase.instance.ref("symbols");
 
   Future<void> assignDeviceToRoom(String deviceId, String newRoomId) async {
     try {
@@ -12,14 +15,14 @@ class SwitchService {
       print("❌ Error assigning device to room: $e");
     }
   }
+
   /// 🔥 Fetch devices grouped by room
   Stream<Map<String, dynamic>> getDevicesByRoomStream() {
+    final roomsRef = FirebaseDatabase.instance.ref("environments/$environmentId/rooms");
     return _devicesRef.onValue.asyncMap((event) async {
       try {
         print("🟢 Fetching devices and rooms...");
         final devicesSnapshot = event.snapshot;
-        final roomsRef = FirebaseDatabase.instance.ref("environments/env_12345/rooms");
-
         final roomsSnapshot = await roomsRef.get();
         if (!devicesSnapshot.exists || !roomsSnapshot.exists) {
           print("🟠 No devices or rooms found.");
@@ -66,8 +69,6 @@ class SwitchService {
     });
   }
 
-
-
   /// 🔥 Update device state (ON/OFF) and sync with assigned symbol
   Future<void> updateDeviceState(String deviceId, bool newState) async {
     try {
@@ -87,16 +88,6 @@ class SwitchService {
       print("❌ Error updating device state: $e");
     }
   }
-
-  // /// 🔥 Assign device to a room
-  // Future<void> assignDeviceToRoom(String deviceId, String newRoomId) async {
-  //   try {
-  //     await _devicesRef.child(deviceId).update({"roomId": newRoomId});
-  //     print("✅ Device $deviceId assigned to room $newRoomId");
-  //   } catch (e) {
-  //     print("❌ Error assigning device to room: $e");
-  //   }
-  // }
 
   /// 🔥 Remove device from a room (Moves to Unassigned)
   Future<void> removeDeviceFromRoom(String deviceId) async {

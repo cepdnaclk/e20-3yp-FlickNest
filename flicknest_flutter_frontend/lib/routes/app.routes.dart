@@ -24,7 +24,7 @@ import '../features/rooms/presentation/pages/room_details_page.dart';
 
 class AppRoutes {
   static final deviceService = DeviceService();
-  static final switchService = SwitchService();
+  static final switchService = SwitchService(''); // Provide a default or placeholder environmentId
 
   static final router = GoRouter(
     routerNeglect: true,
@@ -188,3 +188,4 @@ class AppRoutes {
     ],
   );
 }
+
