@@ -86,18 +86,14 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add a room to get started',
+                    canAdd
+                        ? 'Add a room to get started'
+                        : 'Contact your administrator to add rooms',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  if (canAdd)
-                    ElevatedButton.icon(
-                      onPressed: _showAddRoomDialog,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Room'),
-                    ),
                 ],
               ),
             );

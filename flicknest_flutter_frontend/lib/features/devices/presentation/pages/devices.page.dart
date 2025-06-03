@@ -509,16 +509,20 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.home_outlined, size: 64, color: theme.colorScheme.primary),
+                        Icon(Icons.home_outlined, size: 64, color: Theme.of(context).colorScheme.primary.withAlpha(128),),
                         const SizedBox(height: 16),
                         Text(
-                          "Welcome to Your Smart Home",
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                          'No Devices',
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "Add your first device to get started",
-                          style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            canAdd
+                                ? 'Add a device to get started'
+                                : 'Contact your administrator to add devices',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            )
                         ),
                         const SizedBox(height: 24),
                       ],
