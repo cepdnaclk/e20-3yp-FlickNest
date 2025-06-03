@@ -42,14 +42,18 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     print('Starting Google Sign-in process...');
     try {
-      final userCredential = await _authService.signInWithGoogle();
-      if (userCredential == null) {
+      final result = await _authService.signInWithGoogle();
+      if (result == null) {
         print('Google Sign-in was cancelled or failed with null result');
         _showMessage('Google Sign-in was cancelled');
         return;
       }
+      final userCredential = result.userCredential;
+      final jwt = result.idToken;
       print('Google Sign-in successful');
       print('User: ${userCredential.user?.email}');
+      print('JWT Token: $jwt');
+      // TODO: Store or use the JWT as needed (e.g., send to backend, save in secure storage)
       if (mounted) {
         _showMessage('Google Sign-In successful');
         context.go('/home');

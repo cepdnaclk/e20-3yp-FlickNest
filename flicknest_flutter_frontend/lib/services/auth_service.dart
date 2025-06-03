@@ -5,6 +5,12 @@ import '../features/landing/presentation/pages/home.page.dart';
 import '../helpers/utils.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+class GoogleSignInResult {
+  final UserCredential userCredential;
+  final String idToken;
+  GoogleSignInResult({required this.userCredential, required this.idToken});
+}
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -16,7 +22,7 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Sign in with Google
-  Future<UserCredential?> signInWithGoogle() async {
+  Future<GoogleSignInResult?> signInWithGoogle() async {
     try {
       print('Starting Google Sign In process...');
       
@@ -79,7 +85,8 @@ class AuthService {
             }
           }
           
-          return userCredential;
+          // Return both UserCredential and idToken (JWT)
+          return GoogleSignInResult(userCredential: userCredential, idToken: googleAuth.idToken!);
         } on FirebaseAuthException catch (e) {
           print('Firebase Auth Exception during credential sign in:');
           print('Error code: ${e.code}');
@@ -113,4 +120,5 @@ class AuthService {
       rethrow;
     }
   }
-} 
+}
+
