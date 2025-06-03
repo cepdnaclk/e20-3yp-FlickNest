@@ -4,6 +4,7 @@ import '../../../../Firebase/deviceService.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/environment/environment_provider.dart';
+import '../../../../providers/role/role_provider.dart';
 
 class DevicesPage extends ConsumerStatefulWidget {
   static const String route = '/devices';
@@ -382,6 +383,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     final bool deviceState = deviceData["state"] ?? false;
     final String symbol = deviceData["symbol"] ?? "";
     final String deviceName = deviceData["name"] ?? "Unknown Device";
+    final roleAsync = ref.watch(currentUserRoleProvider);
+    final isAdmin = roleAsync.asData?.value == 'admin';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -438,7 +441,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                 },
                 activeColor: theme.colorScheme.primary,
               ),
-              PopupMenuButton<String?>(
+              isAdmin
+                  ? PopupMenuButton<String?>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (String? targetRoomId) {
                   _moveDeviceToRoom(deviceId, deviceData, targetRoomId);
@@ -452,12 +456,14 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                   ..._roomList
                       .where((roomId) => roomId != currentRoomId)
                       .map((roomId) => PopupMenuItem<String>(
-                            value: roomId,
-                            child: Text('Move to ${_devicesByRoom[roomId]["name"]}'),
-                          ))
+                    value: roomId,
+                    child: Text('Move to ${_devicesByRoom[roomId]["name"]}'),
+                  ))
                       .toList(),
                 ],
-              ),
+              )
+                  : const SizedBox.shrink(),
+
             ],
           ),
         ),
@@ -467,6 +473,10 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    // final currentEnvId = ref.watch(currentEnvironmentProvider);
+    final roleAsync = ref.watch(currentUserRoleProvider);
+    final canAdd = roleAsync.asData?.value == 'admin' || roleAsync.asData?.value == 'co-admin';
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -476,12 +486,11 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
         backgroundColor: Colors.transparent,
         foregroundColor: theme.colorScheme.onSurface,
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canAdd ? FloatingActionButton(
         onPressed: () => _showAddDeviceDialog(),
-        backgroundColor: theme.colorScheme.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("Add Device", style: TextStyle(color: Colors.white)),
-      ),
+        // backgroundColor: theme.colorScheme.primary,
+        child: const Icon(Icons.add),
+      ): null,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: _loading
@@ -512,15 +521,6 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                           style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.add),
-                          label: const Text("Add Device"),
-                          onPressed: _showAddDeviceDialog,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
                       ],
                     ),
                   )
@@ -647,5 +647,4 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     );
   }
 }
-
 
