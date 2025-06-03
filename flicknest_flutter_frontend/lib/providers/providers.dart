@@ -5,4 +5,4 @@ export 'auth/auth_provider.dart';
 export 'environment/environment_provider.dart';
 
 // Role providers
-export 'role/role_provider.dart'; 
+export 'role/role_provider.dart';
