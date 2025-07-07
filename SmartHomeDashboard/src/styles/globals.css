@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 text-white;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-sm bg-white/5 border border-white/10 shadow-xl;
+  }
+  
+  .glass-card-light {
+    @apply backdrop-blur-sm bg-white/10 border border-white/20 shadow-xl;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .device-card {
+    @apply glass-card rounded-xl p-6 transition-all duration-300 hover:bg-white/10 hover:scale-105;
+  }
+  
+  .room-card {
+    @apply glass-card rounded-2xl p-6 transition-all duration-300 hover:bg-white/10;
+  }
+  
+  .toggle-switch {
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .toggle-switch-thumb {
+    @apply inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out;
+  }
+}
