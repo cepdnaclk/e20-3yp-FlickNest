@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../Firebase/switchModel.dart';
 import '../../../../Firebase/deviceService.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/environment/environment_provider.dart';
 import '../../../../providers/role/role_provider.dart';
@@ -26,6 +29,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   bool _loading = true;
   Map<String, bool> _expandedRooms = {};
   List<Map<String, dynamic>> _unassignedDevices = [];
+  bool _isBrokerOnline = false;
+  List<String> updates = [];
 
   // Device type icons mapping
   final Map<String, IconData> _deviceIcons = {
@@ -52,6 +57,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     _switchService = SwitchService(envId ?? '');
     _setupDevicesListener();
     _fetchAvailableSymbols();
+    _checkBrokerStatus();
   }
 
   @override
@@ -64,6 +70,26 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   void dispose() {
     _devicesSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkBrokerStatus() async {
+    try {
+      final response = await http.get(Uri.parse('http://10.42.0.1:5000/health'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isBrokerOnline = data['mqtt_connected'] == true;
+        });
+      } else {
+        setState(() {
+          _isBrokerOnline = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isBrokerOnline = false;
+      });
+    }
   }
 
   /// 🔥 Setup real-time devices listener
@@ -378,6 +404,76 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     }
   }
 
+  Future<void> _updateLocalDbSymbol(String symbolKey, bool state) async {
+    try {
+      final url = Uri.parse('http://10.42.0.1:5000/symbols/$symbolKey');
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'state': state}),
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          updates.add('Local DB PATCH success: ${response.body}');
+        });
+      } else {
+        setState(() {
+          updates.add('Local DB PATCH failed: ${response.statusCode}');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        updates.add('Local DB PATCH error: $e');
+      });
+    }
+  }
+
+  Future<void> _updateLocalDbDeviceState(String deviceId, bool newState) async {
+    try {
+      final file = File('lib/local_db.json');
+      final content = await file.readAsString();
+      final db = jsonDecode(content);
+      // Find the environment and device
+      final envs = db['environments'];
+      for (final envKey in envs.keys) {
+        final env = envs[envKey];
+        if (env['devices'] != null && env['devices'][deviceId] != null) {
+          env['devices'][deviceId]['state'] = newState;
+        }
+      }
+      await file.writeAsString(jsonEncode(db));
+    } catch (e) {
+      print('Error updating local_db.json device state: $e');
+    }
+  }
+
+  Future<void> _toggleDeviceState(String deviceId, String symbolKey, bool newState, String? currentRoomId) async {
+    // Optimistically update UI
+    setState(() {
+      if (currentRoomId != null) {
+        _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = newState;
+      } else {
+        final deviceIndex = _unassignedDevices.indexWhere((d) => d['id'] == deviceId);
+        if (deviceIndex != -1) {
+          _unassignedDevices[deviceIndex]['state'] = newState;
+        }
+      }
+    });
+    // Always update backend (local_db and socket)
+    try {
+      await _updateLocalDbSymbol(symbolKey, newState);
+      await _updateLocalDbDeviceState(deviceId, newState);
+      if (_isBrokerOnline) {
+        // Online: also update Firebase
+        await _switchService.updateDeviceState(deviceId, newState);
+        await _deviceService.updateSymbolSource(symbolKey, "mobile");
+      }
+    } catch (e) {
+      // Optionally show error
+      print('Error toggling device state: $e');
+    }
+  }
+
   Widget _buildDeviceCard(String deviceId, Map<String, dynamic> deviceData, String? currentRoomId) {
     final theme = Theme.of(context);
     final bool deviceState = deviceData["state"] ?? false;
@@ -419,25 +515,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
               Switch.adaptive(
                 value: deviceState,
                 onChanged: (bool newValue) async {
-                  try {
-                    await _switchService.updateDeviceState(deviceId, newValue);
-                    // Update the symbol source to "mobile"
-                    await _deviceService.updateSymbolSource(deviceData["assignedSymbol"], "mobile");
-                    if (mounted) {
-                      setState(() {
-                        if (currentRoomId != null) {
-                          _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = newValue;
-                        } else {
-                          final deviceIndex = _unassignedDevices.indexWhere((d) => d['id'] == deviceId);
-                          if (deviceIndex != -1) {
-                            _unassignedDevices[deviceIndex]['state'] = newValue;
-                          }
-                        }
-                      });
-                    }
-                  } catch (e) {
-                    print('Error updating device state: $e');
-                  }
+                  await _toggleDeviceState(deviceId, deviceData["assignedSymbol"], newValue, currentRoomId);
                 },
                 activeColor: theme.colorScheme.primary,
               ),

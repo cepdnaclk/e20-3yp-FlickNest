@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import 'dart:io';
+import '../services/local_websocket_service.dart';
 
 final brokerSettingsProvider = StateNotifierProvider<BrokerSettingsNotifier, bool>((ref) {
   return BrokerSettingsNotifier();
@@ -12,9 +15,12 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
   static const String _key = 'useLocalBroker';
   static const String _localDbPath = 'local_db.json';
   final FirebaseDatabase _firebaseDb = FirebaseDatabase.instance;
+  final LocalWebSocketService _webSocketService = LocalWebSocketService();
+  final String _webSocketUrl = 'http://localhost:5000';
 
   BrokerSettingsNotifier() : super(false) {
     _loadPreference();
+    _webSocketService.connect(_webSocketUrl);
   }
 
   Future<void> _loadPreference() async {
@@ -41,53 +47,35 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
     }
   }
 
-  Future<dynamic> fetchData(String path) async {
-    try {
-      if (state) {
-        // Local broker fetch logic (local JSON file)
-        return await _fetchFromLocalBroker(path);
-      } else {
-        // Firebase fetch logic
-        final ref = _firebaseDb.ref(path);
-        final snapshot = await ref.get();
-        return snapshot.value;
-      }
-    } catch (e) {
-      rethrow;
+  Future<dynamic> fetchData(String entity) async {
+    if (state) {
+      // Local mode: fetch via WebSocket
+      final completer = Completer();
+      _webSocketService.requestAll(entity, (data) {
+        completer.complete(data);
+      });
+      return completer.future;
+    } else {
+      // Online mode: fetch from Firebase
+      final ref = _firebaseDb.ref(entity);
+      final snapshot = await ref.get();
+      return snapshot.value;
     }
   }
 
-  Future<dynamic> _fetchFromLocalBroker(String path) async {
-    final file = File(_localDbPath);
-    if (!await file.exists()) return null;
-    final contents = await file.readAsString();
-    final Map<String, dynamic> db = json.decode(contents);
-    return db[path];
-  }
-
-  Future<void> saveData(String path, dynamic data) async {
-    try {
-      if (state) {
-        // Local broker save logic (local JSON file)
-        await _saveToLocalBroker(path, data);
-      } else {
-        // Firebase save logic
-        final ref = _firebaseDb.ref(path);
-        await ref.set(data);
-      }
-    } catch (e) {
-      rethrow;
+  Future<void> saveData(String entity, String id, dynamic data) async {
+    if (state) {
+      // Local mode: update via WebSocket
+      _webSocketService.updateEntity(entity, id, data);
+    } else {
+      // Online mode: update both Firebase and local
+      final ref = _firebaseDb.ref('$entity/$id');
+      await ref.set(data);
+      _webSocketService.updateEntity(entity, id, data);
     }
   }
 
-  Future<void> _saveToLocalBroker(String path, dynamic data) async {
-    final file = File(_localDbPath);
-    Map<String, dynamic> db = {};
-    if (await file.exists()) {
-      final contents = await file.readAsString();
-      db = json.decode(contents);
-    }
-    db[path] = data;
-    await file.writeAsString(json.encode(db));
+  void listenUpdates(Function(dynamic) onUpdate) {
+    _webSocketService.listenUpdates(onUpdate);
   }
 }

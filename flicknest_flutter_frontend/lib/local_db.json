@@ -331,7 +331,7 @@
           "assignedSymbol": "sym_017",
           "name": "my_laptop",
           "roomId": "room_003",
-          "state": true
+          "state": false
         }
       },
       "name": "Smart Home",

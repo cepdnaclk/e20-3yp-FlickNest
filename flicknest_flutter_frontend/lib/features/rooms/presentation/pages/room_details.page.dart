@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class RoomDetailsPage extends StatefulWidget {
   static const String route = '/room-details';
@@ -21,11 +23,33 @@ class RoomDetailsPage extends StatefulWidget {
 class _RoomDetailsPageState extends State<RoomDetailsPage> {
   Map<String, dynamic> devices = {};
   bool isLoading = true;
+  bool _isBrokerOnline = false;
 
   @override
   void initState() {
     super.initState();
     _fetchDevices();
+    _checkBrokerStatus();
+  }
+
+  Future<void> _checkBrokerStatus() async {
+    try {
+      final response = await http.get(Uri.parse('http://10.42.0.1:5000/health'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _isBrokerOnline = data['mqtt_connected'] == true;
+        });
+      } else {
+        setState(() {
+          _isBrokerOnline = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isBrokerOnline = false;
+      });
+    }
   }
 
   Future<void> _fetchDevices() async {
@@ -78,13 +102,32 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
     }
   }
 
-  Future<void> _toggleDeviceState(String deviceId, bool currentState) async {
+  Future<void> _updateLocalDbSymbol(String symbolKey, bool state) async {
     try {
-      final newState = !currentState;
-      await FirebaseDatabase.instance
-          .ref('environments/${widget.environmentId}/devices/$deviceId/state')
-          .set(newState);
+      final url = Uri.parse('http://10.42.0.1:5000/symbols/$symbolKey');
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'state': state}),
+      );
+      // Optionally handle response
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
 
+  Future<void> _toggleDeviceState(String deviceId, bool currentState) async {
+    final newState = !currentState;
+    final symbolKey = devices[deviceId]['assignedSymbol'];
+    // Always update backend (local_db and socket)
+    try {
+      await _updateLocalDbSymbol(symbolKey, newState);
+      if (_isBrokerOnline) {
+        // Online: also update Firebase
+        await FirebaseDatabase.instance
+            .ref('environments/${widget.environmentId}/devices/$deviceId/state')
+            .set(newState);
+      }
       setState(() {
         devices[deviceId]['state'] = newState;
       });
@@ -190,4 +233,5 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                 ),
     );
   }
-} 
+}
+
