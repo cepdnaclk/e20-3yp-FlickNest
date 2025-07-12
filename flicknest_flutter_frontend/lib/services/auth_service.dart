@@ -31,79 +31,78 @@ class AuthService {
 
       if (googleUser == null) {
         print('Google Sign In aborted by user');
-        return null;
+        throw FirebaseAuthException(
+          code: 'sign_in_canceled',
+          message: 'Sign in was canceled by the user'
+        );
       }
 
       print('Google Sign In successful for user: ${googleUser.email}');
 
-      try {
-        // Obtain the auth details from the request
-        print('Obtaining Google auth details...');
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        
-        if (googleAuth.accessToken == null) {
-          print('Error: Google Auth accessToken is null');
-          return null;
-        }
-        
-        if (googleAuth.idToken == null) {
-          print('Error: Google Auth idToken is null');
-          return null;
-        }
+      // Obtain the auth details from the request
+      print('Obtaining Google auth details...');
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-        print('Successfully obtained Google auth tokens');
-
-        // Create a new credential
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
+      if (googleAuth.accessToken == null) {
+        print('Error: Google Auth accessToken is null');
+        throw FirebaseAuthException(
+          code: 'invalid_token',
+          message: 'Failed to obtain access token'
         );
+      }
 
-        print('Created Firebase credential from Google auth tokens');
+      if (googleAuth.idToken == null) {
+        print('Error: Google Auth idToken is null');
+        throw FirebaseAuthException(
+          code: 'invalid_token',
+          message: 'Failed to obtain ID token'
+        );
+      }
 
-        // Sign in to Firebase with the Google credential
-        try {
-          final userCredential = await _auth.signInWithCredential(credential);
-          print('Successfully signed in to Firebase with Google credential');
-          print('User ID: ${userCredential.user?.uid}');
-          print('User Email: ${userCredential.user?.email}');
-          
-          // Add user to Realtime Database if first login
-          final user = userCredential.user;
-          if (user != null) {
-            final dbRef = FirebaseDatabase.instance.ref('users/${user.uid}');
-            final snapshot = await dbRef.get();
-            if (!snapshot.exists) {
-              await dbRef.set({
-                'uid': user.uid,
-                'email': user.email,
-                'createdAt': DateTime.now().toIso8601String(),
-              });
-              print('User added to Realtime Database');
-            } else {
-              print('User already exists in Realtime Database');
-            }
-          }
-          
-          // Return both UserCredential and idToken (JWT)
-          return GoogleSignInResult(userCredential: userCredential, idToken: googleAuth.idToken!);
-        } on FirebaseAuthException catch (e) {
-          print('Firebase Auth Exception during credential sign in:');
-          print('Error code: ${e.code}');
-          print('Error message: ${e.message}');
-          print('Error details: ${e.toString()}');
-          rethrow;
+      // Create a new credential
+      print('Creating credentials...');
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the credential
+      print('Signing in to Firebase...');
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+
+      print('Firebase sign in successful');
+
+      // Add user to Realtime Database if first login
+      final user = userCredential.user;
+      if (user != null) {
+        final dbRef = FirebaseDatabase.instance.ref('users/${user.uid}');
+        final snapshot = await dbRef.get();
+        if (!snapshot.exists) {
+          await dbRef.set({
+            'uid': user.uid,
+            'email': user.email,
+            'createdAt': DateTime.now().toIso8601String(),
+          });
+          print('User added to Realtime Database');
+        } else {
+          print('User already exists in Realtime Database');
         }
-      } on Exception catch (e) {
-        print('Error getting Google auth tokens:');
-        print(e.toString());
+      }
+
+      return GoogleSignInResult(
+        userCredential: userCredential,
+        idToken: googleAuth.idToken!,
+      );
+
+    } catch (e) {
+      print('Error in signInWithGoogle: $e');
+      if (e is FirebaseAuthException) {
         rethrow;
       }
-    } on Exception catch (e) {
-      print('General error during Google Sign In:');
-      print('Error type: ${e.runtimeType}');
-      print('Error details: ${e.toString()}');
-      rethrow;
+      throw FirebaseAuthException(
+        code: 'sign_in_failed',
+        message: 'Sign in failed: ${e.toString()}'
+      );
     }
   }
 

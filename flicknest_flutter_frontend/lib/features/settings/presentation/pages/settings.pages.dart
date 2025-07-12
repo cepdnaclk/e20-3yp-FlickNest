@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../environments/presentation/pages/create_environment.dart';
 import 'settings_profile_section.dart';
 import 'settings_environment_section.dart';
+import 'settings_network_section.dart';
 import 'settings_appearance_section.dart';
 import 'settings_notifications_section.dart';
 import 'settings_privacy_section.dart';
@@ -49,6 +50,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ref.read(currentEnvironmentProvider.notifier).setEnvironment(envId);
               },
             ),
+            const SettingsNetworkSection(),
             SettingsAppearanceSection(themeNotifier: themeNotifier),
             SettingsNotificationsSection(
               notificationsEnabled: notificationsEnabled,
@@ -66,7 +68,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 }
-
+//
 class HomeAutomationAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAutomationAppBar({super.key});
 

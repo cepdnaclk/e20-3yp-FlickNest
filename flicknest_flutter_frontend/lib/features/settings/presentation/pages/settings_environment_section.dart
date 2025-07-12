@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../main.dart' show environmentProvider;
+import '../../../../providers/broker_settings_provider.dart';
 import '../../../environments/presentation/pages/create_environment.dart';
 import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
 
-class SettingsEnvironmentSection extends StatelessWidget {
+class SettingsEnvironmentSection extends ConsumerWidget {
   final Map<String, dynamic> environments;
   final String? currentEnvironmentId;
   final Function(String) onEnvironmentSelected;
@@ -19,11 +19,12 @@ class SettingsEnvironmentSection extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final currentEnv = currentEnvironmentId != null ? environments[currentEnvironmentId] : null;
     final currentUser = FirebaseAuth.instance.currentUser;
     final userRole = currentEnv?['users']?[currentUser?.uid]?['role'] ?? '';
+    final useLocalBroker = ref.watch(brokerSettingsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +65,7 @@ class SettingsEnvironmentSection extends StatelessWidget {
                       titlePadding: EdgeInsets.zero,
                       title: Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+                          color: theme.colorScheme.primaryContainer.withAlpha(25),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(28),
                           ),
@@ -80,7 +81,7 @@ class SettingsEnvironmentSection extends StatelessWidget {
                                   IconButton.filled(
                                     icon: const Icon(Icons.add_home_work),
                                     style: IconButton.styleFrom(
-                                      backgroundColor: Colors.green.withOpacity(0.1),
+                                      backgroundColor: Colors.green.withAlpha(25),
                                       foregroundColor: Colors.green,
                                     ),
                                     onPressed: () {
@@ -130,6 +131,14 @@ class SettingsEnvironmentSection extends StatelessWidget {
                 title: const Text('Invitations'),
                 onTap: () => context.push(InvitationsPage.route),
               ),
+              SwitchListTile(
+                title: const Text('Use Local Broker'),
+                subtitle: const Text('Toggle between local and online broker mode'),
+                value: useLocalBroker,
+                onChanged: (bool value) {
+                  ref.read(brokerSettingsProvider.notifier).toggleBrokerMode();
+                },
+              ),
             ],
           ),
         ),
@@ -164,7 +173,7 @@ class SettingsEnvironmentSection extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withAlpha(25),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 20),
