@@ -14,6 +14,9 @@ import 'settings_privacy_section.dart';
 import 'settings_device_section.dart';
 import 'settings_help_section.dart';
 import 'settings_version_section.dart';
+import '../../../../providers/network/network_mode_provider.dart';
+
+enum NetworkMode { local, online }
 
 class SettingsPage extends ConsumerStatefulWidget {
   static const String route = '/settings';

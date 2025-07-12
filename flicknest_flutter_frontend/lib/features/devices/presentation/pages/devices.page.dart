@@ -8,6 +8,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/environment/environment_provider.dart';
 import '../../../../providers/role/role_provider.dart';
+import '../../../../providers/network/network_mode_provider.dart';
+import '../../../../services/local_broker_service.dart';
+import '../../../../services/local_websocket_service.dart';
 
 class DevicesPage extends ConsumerStatefulWidget {
   static const String route = '/devices';
@@ -27,10 +30,11 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   List<Map<String, String>> _availableSymbols = [];
   List<String> _roomList = [];
   bool _loading = true;
-  Map<String, bool> _expandedRooms = {};
+  final Map<String, bool> _expandedRooms = {};
   List<Map<String, dynamic>> _unassignedDevices = [];
   bool _isBrokerOnline = false;
   List<String> updates = [];
+  bool _isDisposed = false;
 
   // Device type icons mapping
   final Map<String, IconData> _deviceIcons = {
@@ -69,6 +73,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   @override
   void dispose() {
     _devicesSubscription?.cancel();
+    _isDisposed = true;
     super.dispose();
   }
 
@@ -77,18 +82,24 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       final response = await http.get(Uri.parse('http://10.42.0.1:5000/health'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          _isBrokerOnline = data['mqtt_connected'] == true;
-        });
+        if (mounted && !_isDisposed) {
+          setState(() {
+            _isBrokerOnline = data['mqtt_connected'] == true;
+          });
+        }
       } else {
+        if (mounted && !_isDisposed) {
+          setState(() {
+            _isBrokerOnline = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted && !_isDisposed) {
         setState(() {
           _isBrokerOnline = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _isBrokerOnline = false;
-      });
     }
   }
 
@@ -448,7 +459,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   }
 
   Future<void> _toggleDeviceState(String deviceId, String symbolKey, bool newState, String? currentRoomId) async {
-    // Optimistically update UI
+    final networkMode = ref.read(networkModeProvider); // Always get latest value
     setState(() {
       if (currentRoomId != null) {
         _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = newState;
@@ -459,17 +470,22 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
         }
       }
     });
-    // Always update backend (local_db and socket)
     try {
-      await _updateLocalDbSymbol(symbolKey, newState);
-      await _updateLocalDbDeviceState(deviceId, newState);
-      if (_isBrokerOnline) {
-        // Online: also update Firebase
+      print('Network mode: $networkMode');
+      if (networkMode == NetworkMode.online) {
+        print('Calling Firebase backend');
         await _switchService.updateDeviceState(deviceId, newState);
         await _deviceService.updateSymbolSource(symbolKey, "mobile");
+      } else {
+        print('Calling local backend');
+        await LocalBrokerService().saveData('devices/$deviceId', {'state': newState});
+        print('LocalBrokerService.saveData called');
+        LocalWebSocketService().updateEntity('device', deviceId, {'state': newState});
+        print('LocalWebSocketService.updateEntity called');
       }
+      await _updateLocalDbSymbol(symbolKey, newState);
+      await _updateLocalDbDeviceState(deviceId, newState);
     } catch (e) {
-      // Optionally show error
       print('Error toggling device state: $e');
     }
   }
@@ -551,6 +567,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final networkMode = ref.watch(networkModeProvider); // Always get latest value
 
     // final currentEnvId = ref.watch(currentEnvironmentProvider);
     final roleAsync = ref.watch(currentUserRoleProvider);
