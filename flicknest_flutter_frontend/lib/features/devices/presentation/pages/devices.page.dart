@@ -11,6 +11,7 @@ import '../../../../providers/role/role_provider.dart';
 import '../../../../providers/network/network_mode_provider.dart';
 import '../../../../services/local_broker_service.dart';
 import '../../../../services/local_websocket_service.dart';
+import '../../../../constants.dart';
 
 class DevicesPage extends ConsumerStatefulWidget {
   static const String route = '/devices';
@@ -35,24 +36,6 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   bool _isBrokerOnline = false;
   List<String> updates = [];
   bool _isDisposed = false;
-
-  // Device type icons mapping
-  final Map<String, IconData> _deviceIcons = {
-    'L': Icons.lightbulb_outline,
-    'F': Icons.wind_power,
-    'TV': Icons.tv,
-    'C': Icons.camera_outdoor,
-    'MS': Icons.sensor_door,
-    'B': Icons.bathroom,
-    'E': Icons.electrical_services,
-    'DB': Icons.doorbell,
-    'K': Icons.kitchen,
-    'R': Icons.router,
-    'BL': Icons.blinds,
-    'AC': Icons.ac_unit,
-    'GL': Icons.garage,
-    'GD': Icons.door_sliding,
-  };
 
   @override
   void initState() {
@@ -79,7 +62,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   Future<void> _checkBrokerStatus() async {
     try {
-      final response = await http.get(Uri.parse('http://10.42.0.1:5000/health'));
+      final response = await http.get(Uri.parse('${AppConstants.localBrokerUrl}${AppConstants.healthEndpoint}'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted && !_isDisposed) {
@@ -175,7 +158,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error fetching available symbols: $e'),
+            content: Text('${AppConstants.symbolFetchError}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -192,14 +175,49 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       return Icons.devices_other;
     }
 
-    return _deviceIcons[prefix] ?? Icons.devices_other;
+    return _getIconDataFromString(AppConstants.deviceTypeIcons[prefix] ?? 'devices_other');
+  }
+
+  IconData _getIconDataFromString(String iconName) {
+    switch (iconName) {
+      case 'lightbulb_outline':
+        return Icons.lightbulb_outline;
+      case 'wind_power':
+        return Icons.wind_power;
+      case 'tv':
+        return Icons.tv;
+      case 'camera_outdoor':
+        return Icons.camera_outdoor;
+      case 'sensor_door':
+        return Icons.sensor_door;
+      case 'bathroom':
+        return Icons.bathroom;
+      case 'electrical_services':
+        return Icons.electrical_services;
+      case 'doorbell':
+        return Icons.doorbell;
+      case 'kitchen':
+        return Icons.kitchen;
+      case 'router':
+        return Icons.router;
+      case 'blinds':
+        return Icons.blinds;
+      case 'ac_unit':
+        return Icons.ac_unit;
+      case 'garage':
+        return Icons.garage;
+      case 'door_sliding':
+        return Icons.door_sliding;
+      default:
+        return Icons.devices_other;
+    }
   }
 
   void _showAddDeviceDialog() {
     if (_environmentId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an environment first'),
+        SnackBar(
+          content: Text(AppConstants.noEnvironmentError),
           backgroundColor: Colors.red,
         ),
       );
@@ -221,7 +239,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                 children: [
                   Icon(Icons.add_circle, color: Theme.of(stateContext).colorScheme.primary),
                   const SizedBox(width: 12),
-                  const Text("Add New Device", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(AppConstants.addDeviceTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               content: SingleChildScrollView(
@@ -231,7 +249,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                   children: [
                     TextField(
                       decoration: InputDecoration(
-                        labelText: "Device Name",
+                        labelText: AppConstants.deviceNameLabel,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         prefixIcon: const Icon(Icons.device_hub),
                         filled: true,
@@ -240,18 +258,18 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                     ),
                     const SizedBox(height: 16),
                     if (_availableSymbols.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'No available symbols. Please add symbols first.',
-                          style: TextStyle(color: Colors.red),
+                          AppConstants.noSymbolsMessage,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       )
                     else
                       DropdownButtonFormField<String>(
                         value: selectedSymbol,
                         decoration: InputDecoration(
-                          labelText: "Device Type",
+                          labelText: AppConstants.deviceTypeLabel,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           prefixIcon: const Icon(Icons.category),
                           filled: true,
@@ -282,18 +300,18 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                       ),
                     const SizedBox(height: 16),
                     if (_roomList.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'No rooms available. Device will be unassigned.',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          AppConstants.noRoomsMessage,
+                          style: const TextStyle(fontStyle: FontStyle.italic),
                         ),
                       )
                     else
                       DropdownButtonFormField<String>(
                         value: selectedRoom,
                         decoration: InputDecoration(
-                          labelText: "Select Room",
+                          labelText: AppConstants.selectRoomLabel,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           prefixIcon: const Icon(Icons.room_preferences),
                           filled: true,
@@ -314,14 +332,14 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text("Cancel"),
+                  child: Text(AppConstants.cancelButtonLabel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
                     if (deviceName.isEmpty) {
                       ScaffoldMessenger.of(dialogContext).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please enter a device name'),
+                        SnackBar(
+                          content: Text(AppConstants.noDeviceNameError),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -329,8 +347,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                     }
                     if (selectedSymbol == null) {
                       ScaffoldMessenger.of(dialogContext).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please select a device type'),
+                        SnackBar(
+                          content: Text(AppConstants.noDeviceTypeError),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -348,7 +366,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                       Navigator.pop(dialogContext);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Device "$deviceName" added successfully'),
+                          content: Text(AppConstants.deviceAddedSuccess.replaceAll('{0}', deviceName)),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -356,7 +374,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                       if (!mounted) return;
                       ScaffoldMessenger.of(dialogContext).showSnackBar(
                         SnackBar(
-                          content: Text('Error adding device: $e'),
+                          content: Text(AppConstants.deviceAddError.replaceAll('{0}', e.toString())),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -366,7 +384,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
-                  child: const Text("Add Device"),
+                  child: Text(AppConstants.addDeviceButtonLabel),
                 ),
               ],
             );
@@ -389,7 +407,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
         } else {
           // Ensure the target room exists in the map
           _devicesByRoom.putIfAbsent(targetRoomId, () => {
-            'name': 'New Room',
+            'name': AppConstants.defaultRoomName,
             'devices': {},
           });
 
@@ -417,7 +435,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   Future<void> _updateLocalDbSymbol(String symbolKey, bool state) async {
     try {
-      final url = Uri.parse('http://10.42.0.1:5000/symbols/$symbolKey');
+      final url = Uri.parse('${AppConstants.localBrokerUrl}${AppConstants.symbolsEndpoint}/$symbolKey');
       final response = await http.patch(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -459,7 +477,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   }
 
   Future<void> _toggleDeviceState(String deviceId, String symbolKey, bool newState, String? currentRoomId) async {
-    final networkMode = ref.read(networkModeProvider); // Always get latest value
+    final networkMode = ref.read(networkModeProvider);
     setState(() {
       if (currentRoomId != null) {
         _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = newState;
@@ -471,22 +489,32 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
       }
     });
     try {
-      print('Network mode: $networkMode');
-      if (networkMode == NetworkMode.online) {
-        print('Calling Firebase backend');
-        await _switchService.updateDeviceState(deviceId, newState);
-        await _deviceService.updateSymbolSource(symbolKey, "mobile");
-      } else {
-        print('Calling local backend');
+      if (networkMode == NetworkMode.local) {
+        print('Using local mode');
+        // Local mode operations
         await LocalBrokerService().saveData('devices/$deviceId', {'state': newState});
-        print('LocalBrokerService.saveData called');
         LocalWebSocketService().updateEntity('device', deviceId, {'state': newState});
-        print('LocalWebSocketService.updateEntity called');
+        await _updateLocalDbSymbol(symbolKey, newState);
+        await _updateLocalDbDeviceState(deviceId, newState);
+      } else {
+        print('Using online mode');
+        // Online mode operations
+        await _switchService.updateDeviceState(deviceId, newState);
+        await _deviceService.updateSymbolSource(symbolKey, AppConstants.deviceSourceMobile);
       }
-      await _updateLocalDbSymbol(symbolKey, newState);
-      await _updateLocalDbDeviceState(deviceId, newState);
     } catch (e) {
       print('Error toggling device state: $e');
+      // Revert the state on error
+      setState(() {
+        if (currentRoomId != null) {
+          _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = !newState;
+        } else {
+          final deviceIndex = _unassignedDevices.indexWhere((d) => d['id'] == deviceId);
+          if (deviceIndex != -1) {
+            _unassignedDevices[deviceIndex]['state'] = !newState;
+          }
+        }
+      });
     }
   }
 
@@ -494,7 +522,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     final theme = Theme.of(context);
     final bool deviceState = deviceData["state"] ?? false;
     final String symbol = deviceData["symbol"] ?? "";
-    final String deviceName = deviceData["name"] ?? "Unknown Device";
+    final String deviceName = deviceData["name"] ?? AppConstants.defaultDeviceName;
     final roleAsync = ref.watch(currentUserRoleProvider);
     final isAdmin = roleAsync.asData?.value == 'admin';
 
@@ -518,7 +546,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
           ),
           title: Text(deviceName, style: theme.textTheme.titleMedium),
           subtitle: Text(
-            deviceState ? "On" : "Off",
+            deviceState ? AppConstants.deviceStateOn : AppConstants.deviceStateOff,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: deviceState
                   ? theme.colorScheme.primary
@@ -543,15 +571,15 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                 },
                 itemBuilder: (BuildContext context) => [
                   if (currentRoomId != null)
-                    const PopupMenuItem<String?>(
+                    PopupMenuItem<String?>(
                       value: null,
-                      child: Text('Move to Unassigned'),
+                      child: Text(AppConstants.moveToUnassignedLabel),
                     ),
                   ..._roomList
                       .where((roomId) => roomId != currentRoomId)
                       .map((roomId) => PopupMenuItem<String>(
                     value: roomId,
-                    child: Text('Move to ${_devicesByRoom[roomId]["name"]}'),
+                    child: Text(AppConstants.moveToRoomLabel.replaceAll('{0}', _devicesByRoom[roomId]["name"])),
                   ))
                       .toList(),
                 ],
@@ -576,7 +604,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Smart Home"),
+        title: Text(AppConstants.appBarTitle),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: theme.colorScheme.onSurface,
@@ -595,7 +623,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                   children: [
                     CircularProgressIndicator(color: theme.colorScheme.primary),
                     const SizedBox(height: 16),
-                    Text("Loading your smart home...", style: theme.textTheme.bodyLarge),
+                    Text(AppConstants.loadingMessage, style: theme.textTheme.bodyLarge),
                   ],
                 ),
               )
@@ -607,14 +635,14 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                         Icon(Icons.home_outlined, size: 64, color: Theme.of(context).colorScheme.primary.withAlpha(128),),
                         const SizedBox(height: 16),
                         Text(
-                          'No Devices',
+                          AppConstants.noDevicesTitle,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 8),
                         Text(
                             canAdd
-                                ? 'Add a device to get started'
-                                : 'Contact your administrator to add devices',
+                                ? AppConstants.addDevicePrompt
+                                : AppConstants.contactAdminPrompt,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Theme.of(context).textTheme.bodySmall?.color,
                             )
@@ -642,12 +670,12 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                                         Icon(Icons.devices_other, color: theme.colorScheme.primary),
                                         const SizedBox(width: 12),
                                         Text(
-                                          "Unassigned Devices",
+                                          AppConstants.unassignedDevicesTitle,
                                           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                         ),
                                         const Spacer(),
                                         Text(
-                                          "${_unassignedDevices.length} devices",
+                                          AppConstants.deviceCountLabel.replaceAll('{0}', _unassignedDevices.length.toString()),
                                           style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                         ),
                                       ],
@@ -675,7 +703,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                             final roomEntry = _devicesByRoom.entries.elementAt(index);
                             final String roomId = roomEntry.key;
                             final Map<String, dynamic> roomData = roomEntry.value;
-                            final String roomName = roomData["name"] ?? "Unknown Room";
+                            final String roomName = roomData["name"] ?? AppConstants.defaultRoomName;
                             final Map<String, dynamic> devices = roomData["devices"] ?? {};
 
                             return Padding(
@@ -705,7 +733,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
                                               ),
                                             ),
                                             Text(
-                                              "${devices.length} devices",
+                                              AppConstants.deviceCountLabel.replaceAll('{0}', devices.length.toString()),
                                               style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                             ),
                                             const SizedBox(width: 8),
@@ -746,4 +774,5 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     );
   }
 }
+
 

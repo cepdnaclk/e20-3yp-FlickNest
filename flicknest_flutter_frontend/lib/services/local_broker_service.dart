@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../constants.dart';
 
 class LocalBrokerService {
   static final LocalBrokerService _instance = LocalBrokerService._internal();
   factory LocalBrokerService() => _instance;
   LocalBrokerService._internal();
 
-  final String _baseUrl = 'http://localhost:9000';
+  String get _baseUrl => AppConstants.localBrokerUrl;
 
   Future<dynamic> fetchData(String path) async {
     try {

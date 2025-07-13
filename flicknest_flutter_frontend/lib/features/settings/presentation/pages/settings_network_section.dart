@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/broker_settings_provider.dart';
+import '../../../../providers/network/network_mode_provider.dart';
 
 class SettingsNetworkSection extends ConsumerWidget {
   const SettingsNetworkSection({Key? key}) : super(key: key);
@@ -8,7 +8,8 @@ class SettingsNetworkSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final useLocalBroker = ref.watch(brokerSettingsProvider);
+    final networkMode = ref.watch(networkModeProvider);
+    final isLocal = networkMode == NetworkMode.local;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,40 +31,38 @@ class SettingsNetworkSection extends ConsumerWidget {
           child: Column(
             children: [
               SwitchListTile(
-                title: const Text('Broker Mode'),
+                title: const Text('Network Mode'),
                 subtitle: Text(
-                  useLocalBroker ? 'Using Local Broker' : 'Using Online Broker',
+                  isLocal ? 'Local Mode (Offline)' : 'Online Mode (Cloud)',
                   style: TextStyle(
-                    color: useLocalBroker ? Colors.green : Colors.blue,
+                    color: isLocal ? Colors.green : Colors.blue,
                   ),
                 ),
                 secondary: Icon(
-                  useLocalBroker ? Icons.lan : Icons.cloud,
-                  color: useLocalBroker ? Colors.green : Colors.blue,
+                  isLocal ? Icons.lan : Icons.cloud,
+                  color: isLocal ? Colors.green : Colors.blue,
                 ),
-                value: useLocalBroker,
+                value: isLocal,
                 onChanged: (bool value) {
-                  ref.read(brokerSettingsProvider.notifier).toggleBrokerMode();
+                  ref.read(networkModeProvider.notifier).state =
+                    value ? NetworkMode.local : NetworkMode.online;
                 },
               ),
               const Divider(indent: 16, endIndent: 16),
               ListTile(
                 leading: Icon(
-                  useLocalBroker ? Icons.settings_ethernet : Icons.cloud_sync,
-                  color: useLocalBroker ? Colors.green : Colors.blue,
+                  Icons.router,
+                  color: theme.colorScheme.primary,
                 ),
-                title: Text(useLocalBroker ? 'Local Broker Status' : 'Cloud Sync Status'),
-                subtitle: Text(
-                  useLocalBroker ? 'Connected to local network' : 'Synced with Firebase',
-                  style: TextStyle(
-                    color: useLocalBroker ? Colors.green : Colors.blue,
-                  ),
-                ),
+                title: const Text('Local Broker Settings'),
+                subtitle: const Text('Configure local broker connection'),
                 trailing: Icon(
-                  Icons.circle,
-                  size: 12,
-                  color: useLocalBroker ? Colors.green : Colors.blue,
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
+                onTap: () {
+                  // Navigate to local broker settings
+                },
               ),
             ],
           ),
