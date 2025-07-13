@@ -5,8 +5,13 @@ class AppConstants {
   // Server URLs
   static const String apiBaseUrl = 'https://api.flicknest.com';
   static const String firebaseDbUrl = 'https://flicknest.firebaseio.com';
-  // static const String localBrokerUrl = 'http://10.42.0.1:5000';
-  static const String localBrokerUrl = 'localhost:5000';
+  static const bool isEmulator = true; // Set to true when using Android emulator
+  static const String localBrokerUrl = isEmulator
+      ? 'http://10.0.2.2:5000'  // Special IP for Android emulator to access host machine
+      : 'http://localhost:5000';
+  static const String localWebSocketUrl = isEmulator
+      ? 'ws://10.0.2.2:5000'    // WebSocket URL for Android emulator
+      : 'ws://localhost:5000';
 
   // Environment keys
   static const String defaultEnvironmentId = 'env_default';
@@ -86,3 +91,4 @@ class AppConstants {
   static const String symbolsEndpoint = '/symbols';
   static const String devicesEndpoint = '/devices';
 }
+

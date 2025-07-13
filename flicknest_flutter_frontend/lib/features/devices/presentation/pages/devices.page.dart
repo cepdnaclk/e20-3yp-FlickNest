@@ -478,6 +478,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   Future<void> _toggleDeviceState(String deviceId, String symbolKey, bool newState, String? currentRoomId) async {
     final networkMode = ref.read(networkModeProvider);
+
+    // Optimistically update UI
     setState(() {
       if (currentRoomId != null) {
         _devicesByRoom[currentRoomId]["devices"][deviceId]["state"] = newState;
@@ -488,14 +490,12 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
         }
       }
     });
+
     try {
       if (networkMode == NetworkMode.local) {
         print('Using local mode');
-        // Local mode operations
-        await LocalBrokerService().saveData('devices/$deviceId', {'state': newState});
-        LocalWebSocketService().updateEntity('device', deviceId, {'state': newState});
-        await _updateLocalDbSymbol(symbolKey, newState);
-        await _updateLocalDbDeviceState(deviceId, newState);
+        // Use the improved LocalBrokerService method
+        await LocalBrokerService().updateSymbolState(symbolKey, newState);
       } else {
         print('Using online mode');
         // Online mode operations
@@ -515,6 +515,25 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
           }
         }
       });
+
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              networkMode == NetworkMode.local
+                  ? 'Failed to update device: Check if local broker is running'
+                  : 'Failed to update device: Check your internet connection',
+            ),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _toggleDeviceState(deviceId, symbolKey, newState, currentRoomId),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -774,5 +793,4 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     );
   }
 }
-
 

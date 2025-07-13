@@ -16,11 +16,10 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
   static const String _localDbPath = 'local_db.json';
   final FirebaseDatabase _firebaseDb = FirebaseDatabase.instance;
   final LocalWebSocketService _webSocketService = LocalWebSocketService();
-  final String _webSocketUrl = 'http://localhost:5000';
 
   BrokerSettingsNotifier() : super(false) {
     _loadPreference();
-    _webSocketService.connect(_webSocketUrl);
+    _webSocketService.connect();
   }
 
   Future<void> _loadPreference() async {
