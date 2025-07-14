@@ -15,6 +15,7 @@ import 'settings_device_section.dart';
 import 'settings_help_section.dart';
 import 'settings_version_section.dart';
 import '../../../../providers/network/network_mode_provider.dart';
+import 'settings_local_broker_section.dart';
 
 enum NetworkMode { local, online }
 
@@ -65,6 +66,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SettingsDeviceSection(),
             const SettingsHelpSection(),
             const SettingsVersionSection(),
+            const SettingsLocalBrokerSection(),
           ],
         ),
       ),

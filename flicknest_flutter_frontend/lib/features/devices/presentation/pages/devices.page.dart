@@ -12,6 +12,7 @@ import '../../../../providers/network/network_mode_provider.dart';
 import '../../../../services/local_broker_service.dart';
 import '../../../../services/local_websocket_service.dart';
 import '../../../../constants.dart';
+import '../../../../helpers/local_broker_config.dart';
 
 class DevicesPage extends ConsumerStatefulWidget {
   static const String route = '/devices';
@@ -62,7 +63,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   Future<void> _checkBrokerStatus() async {
     try {
-      final response = await http.get(Uri.parse('${AppConstants.localBrokerUrl}${AppConstants.healthEndpoint}'));
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
+      final response = await http.get(Uri.parse('$brokerUrl${AppConstants.healthEndpoint}'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted && !_isDisposed) {
@@ -435,7 +437,8 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   Future<void> _updateLocalDbSymbol(String symbolKey, bool state) async {
     try {
-      final url = Uri.parse('${AppConstants.localBrokerUrl}${AppConstants.symbolsEndpoint}/$symbolKey');
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
+      final url = Uri.parse('$brokerUrl${AppConstants.symbolsEndpoint}/$symbolKey');
       final response = await http.patch(
         url,
         headers: {'Content-Type': 'application/json'},
