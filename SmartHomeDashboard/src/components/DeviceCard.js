@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ref, set } from 'firebase/database';
 import { database } from '../lib/firebase';
+import { DeviceActivityStorage } from '../utils/deviceActivityStorage';
 
 const deviceIcons = {
   'Switch': Power,
@@ -37,16 +38,37 @@ const deviceIcons = {
   'default': Smartphone
 };
 
-export default function DeviceCard({ device, deviceId, environmentId, symbol }) {
+export default function DeviceCard({ device, deviceId, environmentId, symbol, rooms, currentUser }) {
   const Icon = deviceIcons[device.name] || deviceIcons.default;
   
   const toggleDevice = async () => {
     try {
-      await set(ref(database, `environments/${environmentId}/devices/${deviceId}/state`), !device.state);
+      const newState = !device.state;
+      
+      // Update device state
+      await set(ref(database, `environments/${environmentId}/devices/${deviceId}/state`), newState);
+      
       // Also update the symbol state if it exists
       if (device.assignedSymbol && symbol) {
-        await set(ref(database, `symbols/${device.assignedSymbol}/state`), !device.state);
+        await set(ref(database, `symbols/${device.assignedSymbol}/state`), newState);
       }
+      
+      // Get room information
+      const room = rooms && device.room ? rooms[device.room] : null;
+      const roomName = room ? room.name : 'Unknown Room';
+      
+      // Log the activity locally for analytics
+      DeviceActivityStorage.logDeviceActivity(
+        deviceId,
+        device.name,
+        device.room || 'unknown',
+        roomName,
+        newState,
+        currentUser?.id || 'anonymous',
+        currentUser?.name || 'Anonymous User',
+        environmentId
+      );
+      
     } catch (error) {
       console.error('Error toggling device:', error);
     }
