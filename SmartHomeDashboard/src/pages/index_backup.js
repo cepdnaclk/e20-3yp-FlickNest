@@ -22,7 +22,6 @@ import UsersTable from '../components/UsersTable';
 import DeviceAccessTable from '../components/DeviceAccessTable';
 import RoomCard from '../components/RoomCard';
 import StatsCard from '../components/StatsCard';
-import DeviceUsageDetails from '../components/DeviceUsageDetails';
 
 export default function Dashboard() {
   const [selectedEnvironment, setSelectedEnvironment] = useState('env_12345');
@@ -229,11 +228,6 @@ export default function Dashboard() {
               <UsersTable users={environment.users} devices={devices} globalUsers={users} />
             </section>
           )}
-
-          {/* Device Usage Details */}
-          <section>
-            <DeviceUsageDetails environmentId={selectedEnvironment} devices={devices} />
-          </section>
 
           {/* Device Access Table */}
           {environment && environment.users && (
