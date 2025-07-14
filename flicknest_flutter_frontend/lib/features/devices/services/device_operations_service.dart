@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/local_broker_service.dart';
 import '../../../constants.dart';
 
@@ -14,7 +15,7 @@ class DeviceOperationsService {
     try {
       if (isLocal) {
         // In local mode, only update the local broker
-        await _updateLocalDeviceState(symbolKey, newState);
+        await _updateLocalDeviceState(deviceId, symbolKey, newState);
       } else {
         // In online mode, update Firebase
         await _updateFirebaseDeviceState(deviceId, symbolKey, newState);
@@ -25,9 +26,24 @@ class DeviceOperationsService {
     }
   }
 
-  Future<void> _updateLocalDeviceState(String symbolKey, bool state) async {
+  Future<void> _updateLocalDeviceState(String deviceId, String symbolKey, bool state) async {
     try {
+      // Update local broker
       await _localBrokerService.updateSymbolState(symbolKey, state);
+
+      // Store the state change for later sync
+      if (environmentId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final localStatesStr = prefs.getString('local_device_states_$environmentId');
+        Map<String, dynamic> localStates = {};
+
+        if (localStatesStr != null) {
+          localStates = json.decode(localStatesStr);
+        }
+
+        localStates[deviceId] = state;
+        await prefs.setString('local_device_states_$environmentId', json.encode(localStates));
+      }
     } catch (e) {
       print('🔴 Local state update failed: $e');
       rethrow;
@@ -100,6 +116,42 @@ class DeviceOperationsService {
       }
     } catch (e) {
       throw Exception('Error adding device: $e');
+    }
+  }
+
+  Future<void> syncLocalChangesWithFirebase() async {
+    if (environmentId == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final localDeviceStates = prefs.getString('local_device_states_$environmentId');
+
+      if (localDeviceStates != null) {
+        final Map<String, dynamic> states = json.decode(localDeviceStates);
+        final dbRef = FirebaseDatabase.instance.ref('environments/$environmentId/devices');
+
+        // Get current Firebase states
+        final snapshot = await dbRef.get();
+        if (!snapshot.exists) return;
+
+        final firebaseDevices = Map<String, dynamic>.from(snapshot.value as Map);
+
+        // Update Firebase with local states
+        for (final entry in states.entries) {
+          final deviceId = entry.key;
+          final bool localState = entry.value;
+
+          if (firebaseDevices.containsKey(deviceId)) {
+            await dbRef.child(deviceId).update({'state': localState});
+          }
+        }
+
+        // Clear local states after successful sync
+        await prefs.remove('local_device_states_$environmentId');
+      }
+    } catch (e) {
+      print('Error syncing local changes with Firebase: $e');
+      rethrow;
     }
   }
 

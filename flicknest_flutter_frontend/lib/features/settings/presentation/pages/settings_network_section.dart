@@ -1,6 +1,9 @@
+import 'package:flicknest_flutter_frontend/features/settings/presentation/pages/settings_local_broker_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../providers/environment/environment_provider.dart';
 import '../../../../providers/network/network_mode_provider.dart';
+import '../../../devices/services/device_operations_service.dart';
 
 class SettingsNetworkSection extends ConsumerWidget {
   const SettingsNetworkSection({Key? key}) : super(key: key);
@@ -43,12 +46,31 @@ class SettingsNetworkSection extends ConsumerWidget {
                   color: isLocal ? Colors.green : Colors.blue,
                 ),
                 value: isLocal,
-                onChanged: (bool value) {
+                onChanged: (bool value) async {
+                  if (!value && isLocal) {  // Switching from local to online
+                    try {
+                      final envId = ref.read(currentEnvironmentProvider);
+                      if (envId != null) {
+                        final deviceOpsService = DeviceOperationsService(envId);
+                        await deviceOpsService.syncLocalChangesWithFirebase();
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Failed to sync local changes. Some device states may be out of sync.'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      }
+                    }
+                  }
                   ref.read(networkModeProvider.notifier).state =
                     value ? NetworkMode.local : NetworkMode.online;
                 },
               ),
-              const Divider(indent: 16, endIndent: 16),
+              if (isLocal)
+                const Divider(indent: 16, endIndent: 16),
               ListTile(
                 leading: Icon(
                   Icons.router,
@@ -60,9 +82,87 @@ class SettingsNetworkSection extends ConsumerWidget {
                   Icons.chevron_right,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                onTap: () {
-                  // Navigate to local broker settings
-                },
+                enabled: isLocal,
+                onTap: isLocal
+                    ? () {
+                        showDialog(
+                          context: context,
+                          barrierColor: Colors.black45,
+                          builder: (context) => Dialog(
+                            backgroundColor: Theme.of(context).cardColor,
+                            surfaceTintColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            child: Container(
+                              width: 400,
+                              constraints: BoxConstraints(
+                                maxHeight: MediaQuery.of(context).size.height * 0.8,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.router_rounded,
+                                          color: Theme.of(context).colorScheme.primary,
+                                          size: 28,
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Local Broker Settings',
+                                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Configure your local broker connection',
+                                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.close,
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                          ),
+                                          onPressed: () => Navigator.of(context).pop(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: SingleChildScrollView(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(24.0),
+                                        child: SettingsLocalBrokerSection(
+                                          onSave: () => Navigator.of(context).pop(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
               ),
             ],
           ),
