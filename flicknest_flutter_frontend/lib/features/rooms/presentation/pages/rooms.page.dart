@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
+import 'package:flicknest_flutter_frontend/providers/role/role_provider.dart';
 import 'room_details.page.dart';
 
 class RoomsPage extends ConsumerStatefulWidget {
@@ -31,6 +32,9 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   @override
   Widget build(BuildContext context) {
     final currentEnvId = ref.watch(currentEnvironmentProvider);
+    final roleAsync = ref.watch(currentUserRoleProvider);
+    final canAdd = roleAsync.asData?.value == 'admin' || roleAsync.asData?.value == 'co-admin';
+
     print('🔵 Current Environment ID: $currentEnvId');
 
     if (currentEnvId == null) {
@@ -82,17 +86,14 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add a room to get started',
+                    canAdd
+                        ? 'Add a room to get started'
+                        : 'Contact your administrator to add rooms',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _showAddRoomDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Room'),
-                  ),
                 ],
               ),
             );
@@ -168,15 +169,17 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                     ),
                   ),
                 ),
-            );
-          },
-        );
-      },
+              );
+            },
+          );
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddRoomDialog,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: canAdd
+          ? FloatingActionButton(
+              onPressed: _showAddRoomDialog,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -204,13 +207,13 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
             labelText: 'Room Name',
             hintText: 'Enter room name',
           ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
-                ),
-                TextButton(
+          ),
+          TextButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
@@ -232,7 +235,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                 print('✅ Room created successfully');
 
                 if (mounted) {
-                      Navigator.pop(context);
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Room created successfully'),
@@ -260,3 +263,4 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
     );
   }
 }
+

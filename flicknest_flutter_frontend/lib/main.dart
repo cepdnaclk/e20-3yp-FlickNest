@@ -17,17 +17,17 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(
-    ProviderScope(
+    const ProviderScope(
       child: HomeAutomationApp(),
     ),
   );
 }
 
-class HomeAutomationApp extends StatelessWidget {
+class HomeAutomationApp extends ConsumerWidget {
   const HomeAutomationApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, mode, _) {

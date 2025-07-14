@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../styles/styles.dart';
-import '../../../shared/widgets/flicky_animated_icons.dart';
 import '../../providers/navigation_providers.dart';
 
 class HomeAutomationBottomBar extends ConsumerWidget {
@@ -10,40 +8,35 @@ class HomeAutomationBottomBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(bottomBarVMProvider).indexWhere((item) => item.isSelected);
 
-    //final config = LandingPageResponsiveConfig.landingPageConfig(context);
-    final barItems = ref.watch(bottomBarVMProvider);
-
-    return Container(
-      padding: HomeAutomationStyles.xsmallPadding,
-      //color: config.bottomBarBg,
-      child: Flex(
-      //  direction: config.bottomBarDirection,
-        direction: Axis.horizontal,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: barItems.map((e) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: HomeAutomationStyles.smallSize),
-            child: IconButton(
-              onPressed: () {
-                ref.read(bottomBarVMProvider.notifier).selectedItem(e);
-              },
-              icon: FlickyAnimatedIcons(
-                icon: e.iconOption,
-                isSelected: e.isSelected,
-              )
-
-            ),
-          );
-        }).toList()
-        .animate(
-          interval: 200.ms
-        ).slideY(
-          begin: 1, end: 0,
-          duration: 0.5.seconds,
-          curve: Curves.easeInOut
+    return NavigationBar(
+      onDestinationSelected: (int index) {
+        final routes = ['/home', '/rooms', '/devices', '/settings'];
+        context.go(routes[index]);
+        
+        // Update the selected item in the provider
+        ref.read(bottomBarVMProvider.notifier).selectedIndex(index);
+      },
+      selectedIndex: currentIndex != -1 ? currentIndex : 0,
+      destinations: const <Widget>[
+        NavigationDestination(
+          icon: Icon(Icons.home),
+          label: 'Home',
         ),
-      ),
+        NavigationDestination(
+          icon: Icon(Icons.room),
+          label: 'Rooms',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.devices),
+          label: 'Devices',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings),
+          label: 'Settings',
+        ),
+      ],
     );
   }
 }

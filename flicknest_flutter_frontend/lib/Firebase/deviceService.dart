@@ -1,167 +1,190 @@
 import 'package:firebase_database/firebase_database.dart';
 
-class   DeviceService {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref("environments/env_12345");
-  final DatabaseReference _symbolsRef = FirebaseDatabase.instance.ref("symbols");
+class DeviceService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
-  // New method to listen to symbol changes
-  Stream<Map<String, dynamic>> getSymbolsStream() {
-    return _symbolsRef.onValue.map((event) {
-      final snapshot = event.snapshot;
-      if (!snapshot.exists) {
-        print("🟠 No symbols found in stream.");
-        return <String, dynamic>{};
-        
-      }
-
-      final symbolsData = Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
-      print("🔵 Symbol Stream Update: ${symbolsData.length} symbols");
-      return symbolsData;
-    });
-  }
-
-  Future<List<Map<String, String>>> getAvailableSymbols() async {
+  /// Get all available symbols with their names
+  Future<List<Map<String, String>>> getAvailableSymbolsWithNames() async {
+    final symbolsWithNames = <Map<String, String>>[];
+    
     try {
-      print("🟢 Fetching available symbols...");
-      final snapshot = await _symbolsRef.get();
-
-      if (!snapshot.exists) {
-        print("🟠 No symbols found in Firebase.");
-        return [];
+      final symbolsSnapshot = await _database.child('symbols').get();
+      
+      if (symbolsSnapshot.exists && symbolsSnapshot.value is Map) {
+        final symbols = Map<String, dynamic>.from(symbolsSnapshot.value as Map);
+        
+        await Future.wait(symbols.entries.map((entry) async {
+          final symbolId = entry.key;
+          final availableSnapshot = await _database.child('symbols/$symbolId/available').get();
+          final nameSnapshot = await _database.child('symbols/$symbolId/name').get();
+          
+          if (availableSnapshot.exists && availableSnapshot.value == true) {
+            final name = nameSnapshot.exists ? nameSnapshot.value.toString() : symbolId;
+            symbolsWithNames.add({
+              'id': symbolId.toString(),
+              'name': name,
+            });
+          }
+        }));
       }
-
-      final symbolsData = snapshot.value as Map<dynamic, dynamic>;
-      final availableSymbols = <Map<String, String>>[];
-
-      symbolsData.forEach((symbolId, symbolInfo) {
-        final symbol = Map<String, dynamic>.from(symbolInfo);
-        if (symbol["available"] == true) {
-          availableSymbols.add({
-            "id": symbolId as String,
-            "name": symbol["name"] as String,
-          });
-        }
-      });
-
-      print("🔵 Available Symbols: $availableSymbols");
-      return availableSymbols;
     } catch (e) {
-      print("❌ Error fetching available symbols: $e");
-      return [];
+      print('Error fetching symbols with names: $e');
+      rethrow;
     }
+    
+    return symbolsWithNames;
   }
 
+  /// Get symbol name by ID (used for display in other parts of the app)
   Future<String> getSymbolName(String symbolId) async {
     try {
-      final snapshot = await _symbolsRef.child(symbolId).get();
+      final snapshot = await _database.child('symbols/$symbolId/name').get();
       if (snapshot.exists) {
-        final symbolData = snapshot.value as Map<dynamic, dynamic>;
-        return symbolData["name"] ?? "Unknown Symbol";
-      } else {
-        return "Unknown Symbol";
+        return snapshot.value.toString();
       }
+      return symbolId; // Return symbol ID if name not found
     } catch (e) {
-      print("❌ Error fetching symbol name: $e");
-      return "Unknown Symbol";
+      print('Error fetching symbol name: $e');
+      return symbolId; // Return symbol ID on error
     }
   }
 
-  /// 🔥 Fetch used symbols (to prevent duplicates)
+  /// Get used symbols (needed for device management)
   Future<List<String>> getUsedSymbols() async {
     try {
-      print("🟢 Fetching used symbols...");
-      final snapshot = await _dbRef.child("devices").get();
-      if (!snapshot.exists) {
-        print("🟠 No devices found.");
-        return [];
+      final snapshot = await _database.child('devices').get();
+      if (snapshot.exists && snapshot.value is Map) {
+        final devices = Map<String, dynamic>.from(snapshot.value as Map);
+        final usedSymbols = devices.values
+            .where((device) => device is Map && device['assignedSymbol'] != null)
+            .map((device) => device['assignedSymbol'].toString())
+            .toList();
+        return usedSymbols;
       }
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      List<String> usedSymbols = [];
-
-      data.forEach((deviceId, deviceData) {
-        final device = Map<String, dynamic>.from(deviceData);
-        if (device.containsKey("assignedSymbol")) {
-          usedSymbols.add(device["assignedSymbol"]);
-        }
-      });
-
-      print("🔵 Used Symbols: $usedSymbols");
-      return usedSymbols;
+      return [];
     } catch (e) {
-      print("❌ Error fetching used symbols: $e");
+      print('Error getting used symbols: $e');
       return [];
     }
   }
 
-  /// 🔥 Update symbol state (this updates the device state too)
-  Future<void> updateSymbolState(String symbolId, bool newState) async {
+  /// Add a new device
+  Future<void> addDevice(String name, String symbolId, String? roomId, {required String environmentId}) async {
     try {
-      await _symbolsRef.child(symbolId).update({"state": newState});
-      print("✅ Symbol $symbolId state updated to: ${newState ? "ON" : "OFF"}");
-    } catch (e) {
-      print("❌ Error updating symbol state: $e");
-    }
-  }
-
-  /// 🔥 Add a new device with a symbol
-  Future<void> addDevice(String deviceName, String symbolId, String? roomId) async {
-    try {
-      // Ensure the symbol exists and is available
-      final symbolSnapshot = await _symbolsRef.child(symbolId).get();
-      if (!symbolSnapshot.exists || !(symbolSnapshot.value as Map)["available"]) {
-        print("❌ Symbol $symbolId is not available!");
-        return;
-      }
-
-      final newDeviceId = "dev_${DateTime.now().millisecondsSinceEpoch}";
-      final symbolState = (symbolSnapshot.value as Map)["state"] ?? false;
-
-      Map<String, dynamic> newDevice = {
-        "name": deviceName,
-        "roomId": roomId ?? "",
-        "allowedUsers": {},
-        "assignedSymbol": symbolId,
-        "state": symbolState, // 🔥 Device state is now the symbol state
+      // Generate a unique device ID based on the symbol ID
+      final deviceId = 'dev_${symbolId.replaceAll('sym_', '')}';
+      
+      // Create the device data
+      final deviceData = {
+        'name': name,
+        'assignedSymbol': symbolId,
+        'state': false,
+        'environmentId': environmentId,
       };
 
-      // Add device to Firebase
-      await _dbRef.child("devices").child(newDeviceId).set(newDevice);
-
-      // Mark symbol as unavailable
-      await _symbolsRef.child(symbolId).update({"available": false});
-
-      // Add device to room if specified
-      if (roomId != null && roomId.isNotEmpty) {
-        await _dbRef.child("rooms").child(roomId).child("devices").child(newDeviceId).set(true);
+      // Add to room if specified
+      if (roomId != null) {
+        await _database.child('rooms/$roomId/devices/$deviceId').set(deviceData);
+      } else {
+        await _database.child('unassigned/devices/$deviceId').set(deviceData);
       }
 
-      print("✅ Device $deviceName added successfully with symbol $symbolId");
     } catch (e) {
-      print("❌ Error adding device: $e");
+      print('Error adding device: $e');
+      rethrow;
     }
   }
 
-  /// 🔥 Remove device (also makes the symbol available again)
-  Future<void> removeDevice(String deviceId, String symbolId) async {
+  /// Update device room
+  Future<void> updateDeviceRoom(String deviceId, String? newRoomId) async {
     try {
-      await _dbRef.child("devices").child(deviceId).remove();
-      await _symbolsRef.child(symbolId).update({"available": true});
-      print("✅ Device $deviceId removed, symbol $symbolId is now available");
-    } catch (e) {
-      print("❌ Error removing device: $e");
-    }
-  }
+      // First, get the device data from all possible locations
+      DataSnapshot? deviceSnapshot;
+      
+      // Check unassigned devices
+      deviceSnapshot = await _database.child('unassigned/devices/$deviceId').get();
+      
+      // If not found in unassigned, check all rooms
+      if (!deviceSnapshot.exists) {
+        final roomsSnapshot = await _database.child('rooms').get();
+        if (roomsSnapshot.exists && roomsSnapshot.value is Map) {
+          final rooms = Map<String, dynamic>.from(roomsSnapshot.value as Map);
+          for (var roomData in rooms.entries) {
+            if (roomData.value is Map && 
+                (roomData.value as Map).containsKey('devices') &&
+                (roomData.value['devices'] as Map).containsKey(deviceId)) {
+              deviceSnapshot = await _database.child('rooms/${roomData.key}/devices/$deviceId').get();
+              // Remove from old room
+              await _database.child('rooms/${roomData.key}/devices/$deviceId').remove();
+              break;
+            }
+          }
+        }
+      } else {
+        // Remove from unassigned
+        await _database.child('unassigned/devices/$deviceId').remove();
+      }
 
-  Future<void> updateDeviceRoom(String deviceId, String? roomId) async {
-    try {
-      await _database.child('devices/$deviceId').update({
-        'roomId': roomId ?? 'unassigned'
-      });
+      if (deviceSnapshot != null && deviceSnapshot.exists) {
+        final deviceData = Map<String, dynamic>.from(deviceSnapshot.value as Map);
+        
+        // Add to new location
+        if (newRoomId != null) {
+          await _database.child('rooms/$newRoomId/devices/$deviceId').set(deviceData);
+        } else {
+          await _database.child('unassigned/devices/$deviceId').set(deviceData);
+        }
+      }
     } catch (e) {
       print('Error updating device room: $e');
-      throw Exception('Failed to update device room');
+      rethrow;
+    }
+  }
+
+  /// Update symbol source
+  Future<void> updateSymbolSource(String symbolId, String source) async {
+    try {
+      await _database.child('symbols/$symbolId/source').set(source);
+    } catch (e) {
+      print('Error updating symbol source: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a device and mark its symbol as available
+  Future<void> removeDevice(String deviceId, String symbolId) async {
+    try {
+      // First, get the device data from all possible locations
+      DataSnapshot? deviceSnapshot;
+      
+      // Check unassigned devices
+      deviceSnapshot = await _database.child('unassigned/devices/$deviceId').get();
+      
+      // If not found in unassigned, check all rooms
+      if (!deviceSnapshot.exists) {
+        final roomsSnapshot = await _database.child('rooms').get();
+        if (roomsSnapshot.exists && roomsSnapshot.value is Map) {
+          final rooms = Map<String, dynamic>.from(roomsSnapshot.value as Map);
+          for (var roomData in rooms.entries) {
+            if (roomData.value is Map && 
+                (roomData.value as Map).containsKey('devices') &&
+                (roomData.value['devices'] as Map).containsKey(deviceId)) {
+              // Remove from room
+              await _database.child('rooms/${roomData.key}/devices/$deviceId').remove();
+              break;
+            }
+          }
+        }
+      } else {
+        // Remove from unassigned
+        await _database.child('unassigned/devices/$deviceId').remove();
+      }
+
+      // Mark symbol as available again
+      await _database.child('symbols/$symbolId/available').set(true);
+    } catch (e) {
+      print('Error removing device: $e');
+      rethrow;
     }
   }
 }

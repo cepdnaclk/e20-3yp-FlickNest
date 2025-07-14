@@ -1,9 +1,4 @@
-import 'package:flicknest_flutter_frontend/features/landing/presentation/widgets/home_page_header.dart';
-import 'package:flicknest_flutter_frontend/features/landing/presentation/widgets/home_tile_options_panel.dart';
-import 'package:flicknest_flutter_frontend/helpers/enums.dart';
-import 'package:flicknest_flutter_frontend/styles/styles.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart' show currentEnvironmentProvider;
 import 'package:flicknest_flutter_frontend/providers/auth/auth_provider.dart' show currentAuthUserProvider;
@@ -13,7 +8,6 @@ import 'package:flicknest_flutter_frontend/Firebase/switchModel.dart';
 import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/admin_dashboard.dart';
 import 'package:flicknest_flutter_frontend/features/landing/presentation/pages/coadmin_dashboard.dart';
 import 'package:flicknest_flutter_frontend/features/landing/presentation/pages/user_dashboard.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends ConsumerWidget {
   static const String route = '/home';

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../main.dart' show environmentProvider;
+import '../../../../providers/broker_settings_provider.dart';
 import '../../../environments/presentation/pages/create_environment.dart';
 import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitations_page.dart';
 
-class SettingsEnvironmentSection extends StatelessWidget {
+class SettingsEnvironmentSection extends ConsumerWidget {
   final Map<String, dynamic> environments;
   final String? currentEnvironmentId;
   final Function(String) onEnvironmentSelected;
@@ -19,8 +19,13 @@ class SettingsEnvironmentSection extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currentEnv = currentEnvironmentId != null ? environments[currentEnvironmentId] : null;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userRole = currentEnv?['users']?[currentUser?.uid]?['role'] ?? '';
+    final useLocalBroker = ref.watch(brokerSettingsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,34 +45,87 @@ class SettingsEnvironmentSection extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: Column(
             children: [
-              ...environments.entries.map((entry) {
-                final envId = entry.key;
-                final env = entry.value;
-                final isSelected = envId == currentEnvironmentId;
-
-                return ListTile(
-                  leading: Icon(
-                    Icons.home_work,
-                    color: isSelected ? theme.colorScheme.primary : null,
-                  ),
-                  title: Text(
-                    env['name'] ?? 'Unnamed Environment',
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? theme.colorScheme.primary : null,
-                    ),
-                  ),
-                  subtitle: Text('ID: $envId'),
-                  selected: isSelected,
-                  onTap: () => onEnvironmentSelected(envId),
-                );
-              }).toList(),
-              const Divider(indent: 16, endIndent: 16),
               ListTile(
-                leading: const Icon(Icons.add_home_work, color: Colors.green),
-                title: const Text('Create Environment'),
-                onTap: () => context.push(CreateEnvironmentPage.route),
+                leading: const Icon(Icons.home_work),
+                title: Text(
+                  currentEnv?['name'] ?? 'Select Environment',
+                  style: theme.textTheme.titleMedium,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _getRoleIcon(userRole),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      titlePadding: EdgeInsets.zero,
+                      title: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withAlpha(25),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(28),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                              child: Row(
+                                children: [
+                                  const Text('Environments'),
+                                  const Spacer(),
+                                  IconButton.filled(
+                                    icon: const Icon(Icons.add_home_work),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.green.withAlpha(25),
+                                      foregroundColor: Colors.green,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      context.push(CreateEnvironmentPage.route);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+                          ],
+                        ),
+                      ),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ...environments.entries.map((entry) {
+                              final envId = entry.key;
+                              final env = entry.value;
+                              final envUserRole = env['users'][currentUser?.uid]?['role'] ?? '';
+                              return ListTile(
+                                leading: Icon(
+                                  Icons.home_work,
+                                  color: envId == currentEnvironmentId ? theme.colorScheme.primary : null,
+                                ),
+                                title: Text(env['name'] ?? 'Unnamed Environment'),
+                                trailing: _getRoleIcon(envUserRole),
+                                selected: envId == currentEnvironmentId,
+                                onTap: () {
+                                  onEnvironmentSelected(envId);
+                                  Navigator.pop(context);
+                                },
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
+              const Divider(indent: 16, endIndent: 16),
               ListTile(
                 leading: const Icon(Icons.mail_outline, color: Colors.blue),
                 title: const Text('Invitations'),
@@ -79,4 +137,39 @@ class SettingsEnvironmentSection extends StatelessWidget {
       ],
     );
   }
-} 
+
+  Widget _getRoleIcon(String role) {
+    IconData icon;
+    Color color;
+    String tooltip;
+
+    switch (role) {
+      case 'admin':
+        icon = Icons.admin_panel_settings;
+        color = Colors.blue;
+        tooltip = 'Admin';
+        break;
+      case 'co-admin':
+        icon = Icons.security;
+        color = Colors.teal;
+        tooltip = 'Co-Admin';
+        break;
+      default:
+        icon = Icons.person_outline;
+        color = Colors.grey;
+        tooltip = 'User';
+    }
+
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withAlpha(25),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+}

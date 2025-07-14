@@ -4,6 +4,7 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../services/auth_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   static const String route = "/login";
@@ -17,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _authService = AuthService();
   bool _isLoading = false;
   
-  @override
+  // @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -42,28 +43,64 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     print('Starting Google Sign-in process...');
     try {
-      final userCredential = await _authService.signInWithGoogle();
-      if (userCredential == null) {
+      final result = await _authService.signInWithGoogle();
+      if (result == null) {
         print('Google Sign-in was cancelled or failed with null result');
-        _showMessage('Google Sign-in was cancelled');
+        _showMessage('Sign-in was cancelled');
         return;
       }
-      print('Google Sign-in successful');
-      print('User: ${userCredential.user?.email}');
       if (mounted) {
-        _showMessage('Google Sign-In successful');
         context.go('/home');
       }
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Exception during Google Sign-in:');
-      print('Error code: ${e.code}');
-      print('Error message: ${e.message}');
-      _showMessage('Authentication failed: ${e.message}');
-    } on Exception catch (e) {
-      print('Exception during Google Sign-in:');
-      print('Error type: ${e.runtimeType}');
-      print('Error details: $e');
-      _showMessage('Failed to sign in with Google: $e');
+      print('Firebase Auth error: ${e.code} - ${e.message}');
+      String errorMessage;
+      switch (e.code) {
+        case 'account-exists-with-different-credential':
+          errorMessage = 'This account exists with a different sign-in method';
+          break;
+        case 'invalid-credential':
+          errorMessage = 'The sign-in credentials are invalid';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Google sign-in is not enabled';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No account found with these credentials';
+          break;
+        case 'network-request-failed':
+          errorMessage = 'Please check your internet connection';
+          break;
+        case 'sign_in_canceled':
+          errorMessage = 'Sign-in was cancelled';
+          break;
+        case 'invalid_token':
+          errorMessage = 'Authentication failed. Please try again';
+          break;
+        default:
+          errorMessage = e.message ?? 'An error occurred during sign in';
+      }
+      _showMessage(errorMessage);
+    } on PlatformException catch (e) {
+      print('Platform error: ${e.code} - ${e.message}');
+      String errorMessage;
+      switch (e.code) {
+        case 'network_error':
+          errorMessage = 'Please check your internet connection';
+          break;
+        case 'sign_in_failed':
+          errorMessage = 'Sign-in failed. Please try again';
+          break;
+        default:
+          errorMessage = e.message ?? 'An error occurred during sign in';
+      }
+      _showMessage(errorMessage);
+    } catch (e) {
+      print('Unexpected error during sign-in: $e');
+      _showMessage('An unexpected error occurred. Please try again');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -77,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -113,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.movie,
+                        Icons.waving_hand,
                         size: 64,
                         color: Colors.white,
                       ),

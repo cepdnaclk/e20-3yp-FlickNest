@@ -1,0 +1,649 @@
+{
+  "environments": {
+    "-OROy6daKl5r6im0nDrb": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "name": "Second",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "email": "wmndilshan@gmail.com",
+          "handbandId": "",
+          "name": "Nuwan Dilshan",
+          "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJ1AgKX-qpvOosiIyClvceQyqqaDermqh0RYAkfcqLXJjAPGg=s96-c",
+          "role": "admin"
+        }
+      }
+    },
+    "-ORVZWP9G0fJw-lb5QaR": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "name": "third",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        }
+      }
+    },
+    "-ORZ-QSZUyoPQKENzK3I": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "createdAt": 1748655781877,
+      "name": "fourth",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748655781877,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        },
+        "jgjGKOqgZDTSHuRcsjeP9CpDkV52": {
+          "addedAt": 1748655781877,
+          "email": "dilshannuwan06@gmail.com",
+          "name": "Anonymous",
+          "role": "user"
+        },
+        "kZnzMGo0TbbVOdUqhvWwYlrMYH32": {
+          "addedAt": 1748655781877,
+          "email": "surajwijesooriya47@gmail.com",
+          "name": "Anonymous",
+          "role": "user"
+        },
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748655781877,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "Anonymous",
+          "role": "co-admin"
+        }
+      }
+    },
+    "-ORZ1_4_lCb5lUDn-7fv": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "createdAt": 1748656345564,
+      "name": "fifth",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748656345564,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        },
+        "kZnzMGo0TbbVOdUqhvWwYlrMYH32": {
+          "addedAt": 1748656345564,
+          "email": "surajwijesooriya47@gmail.com",
+          "name": "Anonymous",
+          "role": "user"
+        },
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748656345564,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "Anonymous",
+          "role": "co-admin"
+        }
+      }
+    },
+    "-ORiNOdfOCOjymSLaipU": {
+      "adminId": "zLpSk1cJt4PCxm43wjvi0SWqAx62",
+      "createdAt": 1748829838770,
+      "name": "lovely",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748829934472,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "user"
+        },
+        "jgjGKOqgZDTSHuRcsjeP9CpDkV52": {
+          "addedAt": 1748830387635,
+          "email": "dilshannuwan06@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "user"
+        },
+        "kZnzMGo0TbbVOdUqhvWwYlrMYH32": {
+          "addedAt": 1748829838770,
+          "email": "surajwijesooriya47@gmail.com",
+          "name": "Anonymous",
+          "role": "co-admin"
+        },
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748829838770,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "W.M.N. DILSHAN",
+          "role": "admin"
+        }
+      }
+    },
+    "-ORiOzoIA5eEKGjjqLyH": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "createdAt": 1748830257372,
+      "name": "abcd",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748830257372,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        },
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748839199385,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "W.M.N. DILSHAN",
+          "role": "user"
+        }
+      }
+    },
+    "-ORp--IxkF6b_6Y0c6d3": {
+      "adminId": "jgjGKOqgZDTSHuRcsjeP9CpDkV52",
+      "createdAt": 1748940883921,
+      "name": "House 2",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748941085916,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "co-admin"
+        },
+        "jgjGKOqgZDTSHuRcsjeP9CpDkV52": {
+          "addedAt": 1748940883921,
+          "email": "dilshannuwan06@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        }
+      }
+    },
+    "-ORs5F-iKlIifc9rWaYL": {
+      "users": {
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748993025070,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "W.M.N. DILSHAN",
+          "role": "user"
+        }
+      }
+    },
+    "-ORs5GsrsfStIoBMcgT7": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "createdAt": 1748992859789,
+      "name": "house 2",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748992859789,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        },
+        "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+          "addedAt": 1748993010030,
+          "email": "e20455@eng.pdn.ac.lk",
+          "name": "W.M.N. DILSHAN",
+          "role": "user"
+        }
+      }
+    },
+    "-ORs5KotAGbxfT04AYoF": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "createdAt": 1748992875999,
+      "name": "house 2",
+      "users": {
+        "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+          "addedAt": 1748992875999,
+          "email": "wmndilshan@gmail.com",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        }
+      }
+    },
+    "env_12345": {
+      "adminId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+      "devices": {
+        "dev_1001": {
+          "assignedSymbol": "sym_001",
+          "name": "Switch",
+          "roomId": "room_001",
+          "state": true
+        },
+        "dev_1002": {
+          "allowedUsers": {
+            "user_003": true
+          },
+          "assignedSymbol": "sym_002",
+          "name": "Blub",
+          "roomId": "room_001",
+          "state": false
+        },
+        "dev_1003": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_003",
+          "name": "Door Lock",
+          "roomId": "room_001",
+          "state": true
+        },
+        "dev_1004": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_004",
+          "name": "Corridor Light",
+          "roomId": "room_002",
+          "state": false
+        },
+        "dev_1005": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_005",
+          "name": "Motion Sensor",
+          "roomId": "room_002",
+          "state": false
+        },
+        "dev_1006": {
+          "allowedUsers": {
+            "user_002": true
+          },
+          "assignedSymbol": "sym_006",
+          "name": "Bathroom Heater",
+          "roomId": "room_003",
+          "state": true
+        },
+        "dev_1007": {
+          "allowedUsers": {
+            "user_001": true,
+            "user_002": true
+          },
+          "assignedSymbol": "sym_007",
+          "name": "Bathroom Light",
+          "roomId": "room_003",
+          "state": false
+        },
+        "dev_1008": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_008",
+          "name": "Main Entrance Lock",
+          "roomId": "room_004",
+          "state": false
+        },
+        "dev_1009": {
+          "assignedSymbol": "sym_009",
+          "name": "Doorbell",
+          "roomId": "room_004",
+          "state": true
+        },
+        "dev_1010": {
+          "allowedUsers": {
+            "user_003": true
+          },
+          "assignedSymbol": "sym_010",
+          "name": "Kitchen Light",
+          "roomId": "room_005",
+          "state": true
+        },
+        "dev_1011": {
+          "allowedUsers": {
+            "user_003": true
+          },
+          "assignedSymbol": "sym_011",
+          "name": "Refrigerator",
+          "roomId": "room_005",
+          "state": false
+        },
+        "dev_1012": {
+          "allowedUsers": {
+            "user_002": true
+          },
+          "assignedSymbol": "sym_012",
+          "name": "Bedroom Light",
+          "roomId": "room_006",
+          "state": false
+        },
+        "dev_1013": {
+          "allowedUsers": {
+            "user_002": true
+          },
+          "assignedSymbol": "sym_013",
+          "name": "Air Conditioner",
+          "roomId": "room_006",
+          "state": true
+        },
+        "dev_1014": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_014",
+          "name": "Garage Light",
+          "roomId": "room_007",
+          "state": false
+        },
+        "dev_1015": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_015",
+          "name": "Garage Door",
+          "roomId": "room_007",
+          "state": true
+        },
+        "dev_1740834037674": {
+          "allowedUsers": {
+            "user_001": true
+          },
+          "assignedSymbol": "sym_017",
+          "name": "my_laptop",
+          "roomId": "room_003",
+          "state": false
+        }
+      },
+      "name": "Smart Home",
+      "rooms": {
+        "-ORifd6CePOl4T0vnw96": {
+          "name": "qwe"
+        },
+        "room_001": {
+          "devices": {
+            "dev_1001": true,
+            "dev_1002": true,
+            "dev_1003": true
+          },
+          "name": "Living Room"
+        },
+        "room_002": {
+          "devices": {
+            "dev_1004": true,
+            "dev_1005": true
+          },
+          "name": "Corridor"
+        },
+        "room_003": {
+          "devices": {
+            "dev_1006": true,
+            "dev_1007": true
+          },
+          "name": "Bathroom"
+        },
+        "room_004": {
+          "devices": {
+            "dev_1008": true,
+            "dev_1009": true,
+            "dev_1740834037674": true
+          },
+          "name": "Main Entrance"
+        },
+        "room_005": {
+          "devices": {
+            "dev_1010": true,
+            "dev_1011": true
+          },
+          "name": "Kitchen"
+        },
+        "room_006": {
+          "devices": {
+            "dev_1012": true,
+            "dev_1013": true
+          },
+          "name": "Bedroom"
+        },
+        "room_007": {
+          "devices": {
+            "dev_1014": true,
+            "dev_1015": true
+          },
+          "name": "Garage"
+        }
+      },
+      "users": {
+        "user_001": {
+          "controllableDevices": {
+            "dev_1001": true,
+            "dev_1002": true,
+            "dev_1003": true,
+            "dev_1004": true,
+            "dev_1005": true
+          },
+          "handbandId": "hb_001",
+          "name": "Nuwan Dilshan",
+          "role": "admin"
+        },
+        "user_002": {
+          "controllableDevices": {
+            "dev_1006": true,
+            "dev_1007": true,
+            "dev_1008": true
+          },
+          "handbandId": "hb_002",
+          "name": "Bob",
+          "role": "user"
+        }
+      }
+    }
+  },
+  "symbols": {
+    "sym_001": {
+      "available": false,
+      "name": "circle",
+      "source": "broker",
+      "state": true
+    },
+    "sym_002": {
+      "available": false,
+      "name": "wave",
+      "source": "broker",
+      "state": true
+    },
+    "sym_003": {
+      "available": false,
+      "name": "updown",
+      "source": "broker",
+      "state": true
+    },
+    "sym_004": {
+      "available": false,
+      "name": "double_tap",
+      "source": "broker",
+      "state": false
+    },
+    "sym_005": {
+      "available": false,
+      "name": "swipe_up",
+      "source": "broker",
+      "state": false
+    },
+    "sym_006": {
+      "available": false,
+      "name": "swipe_down",
+      "source": "mobile",
+      "state": true
+    },
+    "sym_007": {
+      "available": false,
+      "name": "double_wave",
+      "source": "mobile",
+      "state": false
+    },
+    "sym_008": {
+      "available": false,
+      "name": "flick",
+      "source": "mobile",
+      "state": false
+    },
+    "sym_009": {
+      "available": false,
+      "name": "knock",
+      "source": "mobile",
+      "state": true
+    },
+    "sym_010": {
+      "available": false,
+      "name": "clap",
+      "source": "mobile",
+      "state": true
+    },
+    "sym_011": {
+      "available": false,
+      "name": "press",
+      "source": "mobile",
+      "state": false
+    },
+    "sym_012": {
+      "available": false,
+      "name": "tilt",
+      "source": "mobile",
+      "state": false
+    },
+    "sym_013": {
+      "available": false,
+      "name": "rotate",
+      "source": "mobile",
+      "state": true
+    },
+    "sym_014": {
+      "available": false,
+      "name": "flip",
+      "source": "mobile",
+      "state": false
+    },
+    "sym_015": {
+      "available": false,
+      "name": "tap",
+      "source": "mobile",
+      "state": true
+    },
+    "sym_016": {
+      "available": true,
+      "name": "arise",
+      "source": "broker",
+      "state": true
+    },
+    "sym_017": {
+      "available": false,
+      "name": "rectangle",
+      "source": "mobile",
+      "state": true
+    }
+  },
+  "users": {
+    "Hv03hlt99gTXsq5zOrmqdYo5MPF2": {
+      "createdAt": "2025-05-30T14:30:03.815906",
+      "email": "wmndilshan@gmail.com",
+      "environments": {
+        "-ORZ-QSZUyoPQKENzK3I": "admin",
+        "-ORiNOdfOCOjymSLaipU": "user",
+        "-ORiOzoIA5eEKGjjqLyH": "admin",
+        "-ORp--IxkF6b_6Y0c6d3": "co-admin",
+        "-ORs5F-iKlIifc9rWaYL": "admin",
+        "-ORs5GsrsfStIoBMcgT7": "admin",
+        "-ORs5KotAGbxfT04AYoF": "admin",
+        "env_12345": "admin"
+      },
+      "uid": "Hv03hlt99gTXsq5zOrmqdYo5MPF2"
+    },
+    "jgjGKOqgZDTSHuRcsjeP9CpDkV52": {
+      "createdAt": "2025-05-30T14:52:03.678570",
+      "email": "dilshannuwan06@gmail.com",
+      "environments": {
+        "-ORiNOdfOCOjymSLaipU": "user",
+        "-ORp--IxkF6b_6Y0c6d3": "admin"
+      },
+      "invitations": {
+        "-ORs5F-iKlIifc9rWaYL": {
+          "environmentId": "-ORs5F-iKlIifc9rWaYL",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992852388
+        },
+        "-ORs5GsrsfStIoBMcgT7": {
+          "environmentId": "-ORs5GsrsfStIoBMcgT7",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992860110
+        },
+        "-ORs5KotAGbxfT04AYoF": {
+          "environmentId": "-ORs5KotAGbxfT04AYoF",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992876270
+        }
+      },
+      "uid": "jgjGKOqgZDTSHuRcsjeP9CpDkV52"
+    },
+    "kZnzMGo0TbbVOdUqhvWwYlrMYH32": {
+      "createdAt": "2025-05-30T14:51:45.716120",
+      "email": "surajwijesooriya47@gmail.com",
+      "environments": {
+        "-ORiNOdfOCOjymSLaipU": {
+          "addedAt": 1748829839011,
+          "role": "co-admin"
+        }
+      },
+      "invitations": {
+        "-ORZ1_4_lCb5lUDn-7fv": {
+          "environmentId": "-ORZ1_4_lCb5lUDn-7fv",
+          "environmentName": "fifth",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748656345854
+        },
+        "-ORiNOdfOCOjymSLaipU": {
+          "environmentId": "-ORiNOdfOCOjymSLaipU",
+          "environmentName": "lovely",
+          "inviterId": "zLpSk1cJt4PCxm43wjvi0SWqAx62",
+          "role": "co-admin",
+          "timestamp": 1748829839017
+        },
+        "-ORiOzoIA5eEKGjjqLyH": {
+          "environmentId": "-ORiOzoIA5eEKGjjqLyH",
+          "environmentName": "abcd",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748830257770
+        },
+        "-ORp--IxkF6b_6Y0c6d3": {
+          "environmentId": "-ORp--IxkF6b_6Y0c6d3",
+          "environmentName": "House 2",
+          "inviterId": "jgjGKOqgZDTSHuRcsjeP9CpDkV52",
+          "role": "user",
+          "timestamp": 1748940884361
+        },
+        "-ORs5F-iKlIifc9rWaYL": {
+          "environmentId": "-ORs5F-iKlIifc9rWaYL",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992852454
+        },
+        "-ORs5GsrsfStIoBMcgT7": {
+          "environmentId": "-ORs5GsrsfStIoBMcgT7",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992860108
+        },
+        "-ORs5KotAGbxfT04AYoF": {
+          "environmentId": "-ORs5KotAGbxfT04AYoF",
+          "environmentName": "house 2",
+          "inviterId": "Hv03hlt99gTXsq5zOrmqdYo5MPF2",
+          "role": "user",
+          "timestamp": 1748992876332
+        }
+      },
+      "uid": "kZnzMGo0TbbVOdUqhvWwYlrMYH32"
+    },
+    "zLpSk1cJt4PCxm43wjvi0SWqAx62": {
+      "createdAt": "2025-05-30T14:52:18.679269",
+      "email": "e20455@eng.pdn.ac.lk",
+      "environments": {
+        "-ORiNOdfOCOjymSLaipU": {
+          "addedAt": 1748829838951,
+          "role": "admin"
+        },
+        "-ORiOzoIA5eEKGjjqLyH": "user",
+        "-ORs5F-iKlIifc9rWaYL": "user",
+        "-ORs5GsrsfStIoBMcgT7": "user"
+      },
+      "uid": "zLpSk1cJt4PCxm43wjvi0SWqAx62"
+    }
+  }
+}

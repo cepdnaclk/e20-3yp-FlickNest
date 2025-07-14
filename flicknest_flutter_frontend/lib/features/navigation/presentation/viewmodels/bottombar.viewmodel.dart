@@ -20,6 +20,12 @@ class BottomBarViewModel extends StateNotifier<List<BottomBarNavItemModel>> {
     GoRouter.of(Utils.tabNav.currentContext!).go(selectedItem.route);
   }
 
+  void selectedIndex(int index) {
+    if (index >= 0 && index < state.length) {
+      selectedItem(state[index]);
+    }
+  }
+
   void markBottomBarItemSelectedByRoute(String route) {
     state = [
       for(var item in state)

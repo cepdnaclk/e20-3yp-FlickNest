@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flicknest_flutter_frontend/Firebase/deviceService.dart';
+import 'package:flicknest_flutter_frontend/providers/environment/environment_provider.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 final deviceServiceProvider = Provider((ref) => DeviceService());
 
@@ -25,7 +27,7 @@ class _DeviceManagementPageState extends ConsumerState<DeviceManagementPage> {
 
   void _refreshData() {
     final deviceService = ref.read(deviceServiceProvider);
-    _availableSymbols = deviceService.getAvailableSymbols();
+    _availableSymbols = deviceService.getAvailableSymbolsWithNames();
     _usedSymbols = deviceService.getUsedSymbols();
   }
 
@@ -75,7 +77,7 @@ class _DeviceManagementPageState extends ConsumerState<DeviceManagementPage> {
           return Text('Error: ${snapshot.error}');
         }
 
-        final availableCount = snapshot.data?[0].length ?? 0;
+        final availableCount = (snapshot.data?[0] as List<Map<String, String>>?)?.length ?? 0;
         final usedCount = snapshot.data?[1].length ?? 0;
 
         return Card(
@@ -169,8 +171,19 @@ class _DeviceManagementPageState extends ConsumerState<DeviceManagementPage> {
     final deviceNameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     String? selectedSymbol;
+    final environmentId = ref.read(currentEnvironmentProvider);
 
-    final availableSymbols = await ref.read(deviceServiceProvider).getAvailableSymbols();
+    if (environmentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an environment first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final availableSymbols = await ref.read(deviceServiceProvider).getAvailableSymbolsWithNames();
 
     if (!mounted) return;
 
@@ -224,16 +237,32 @@ class _DeviceManagementPageState extends ConsumerState<DeviceManagementPage> {
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
-                await ref.read(deviceServiceProvider).addDevice(
-                      deviceNameController.text,
-                      selectedSymbol!,
-                      null, // Room ID can be added later
-                    );
-                if (!mounted) return;
-                Navigator.pop(context);
-                setState(() {
-                  _refreshData();
-                });
+                try {
+                  await ref.read(deviceServiceProvider).addDevice(
+                    deviceNameController.text,
+                    selectedSymbol!,
+                    null, // Room ID can be added later
+                    environmentId: environmentId,
+                  );
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                  setState(() {
+                    _refreshData();
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Device added successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error adding device: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('Add Device'),
@@ -257,14 +286,32 @@ class _DeviceManagementPageState extends ConsumerState<DeviceManagementPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              // We need to generate a device ID based on the symbol ID
-              final deviceId = 'dev_${symbolId.replaceAll('sym_', '')}';
-              await ref.read(deviceServiceProvider).removeDevice(deviceId, symbolId);
-              if (!mounted) return;
-              Navigator.pop(context);
-              setState(() {
-                _refreshData();
-              });
+              try {
+                // We need to generate a device ID based on the symbol ID
+                final deviceId = 'dev_${symbolId.replaceAll('sym_', '')}';
+                
+                // Remove device and mark symbol as available
+                await ref.read(deviceServiceProvider).removeDevice(deviceId, symbolId);
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                setState(() {
+                  _refreshData();
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Device deleted successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error deleting device: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
             child: const Text('Delete'),
           ),

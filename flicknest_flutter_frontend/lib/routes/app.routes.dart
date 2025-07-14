@@ -3,7 +3,7 @@ import 'package:flicknest_flutter_frontend/features/navigation/presentation/page
 import 'package:flicknest_flutter_frontend/features/navigation/presentation/pages/invitation_details_page.dart';
 import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/device_management.dart';
 import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/room_management.dart';
-import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/user_management.dart';
+import 'package:flicknest_flutter_frontend/features/admin/presentation/pages/manage_users.page.dart';
 import 'package:flicknest_flutter_frontend/Firebase/deviceService.dart';
 import 'package:flicknest_flutter_frontend/Firebase/switchModel.dart';
 // import 'package:flicknest_flutter_frontend/features/auth/presentation/pages/register_page.dart';
@@ -24,7 +24,7 @@ import '../features/rooms/presentation/pages/room_details_page.dart';
 
 class AppRoutes {
   static final deviceService = DeviceService();
-  static final switchService = SwitchService();
+  static final switchService = SwitchService(''); // Provide a default or placeholder environmentId
 
   static final router = GoRouter(
     routerNeglect: true,
@@ -160,9 +160,9 @@ class AppRoutes {
       ),
       GoRoute(
         parentNavigatorKey: Utils.mainNav,
-        path: UserManagementPage.route,
+        path: ManageUsersPage.route,
         builder: (context, state) {
-          return const UserManagementPage();
+          return const ManageUsersPage();
         },
       ),
       GoRoute(
@@ -188,3 +188,4 @@ class AppRoutes {
     ],
   );
 }
+
