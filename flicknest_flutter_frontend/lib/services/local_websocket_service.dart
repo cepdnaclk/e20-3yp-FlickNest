@@ -54,11 +54,15 @@ class LocalWebSocketService {
       _connected = false;
     });
 
+    // Clear any existing listeners before connecting
+    socket.clearListeners();
     socket.connect();
   }
 
   void disconnect() {
+    print('Disconnecting WebSocket');
     socket.disconnect();
+    socket.dispose();
     _connected = false;
   }
 
@@ -77,12 +81,17 @@ class LocalWebSocketService {
 
   void updateEntity(String entity, String id, Map<String, dynamic> data) {
     if (!_connected) {
-      print('WebSocket not connected, attempting to connect...');
-      connect();
+      print('WebSocket not connected, cannot update entity');
       return;
     }
 
-    final payload = jsonEncode({'id': id, 'data': data});
+    final payload = jsonEncode({
+      'id': id,
+      'data': data,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+
+    print('Emitting update via WebSocket: $payload');
     socket.emit('update_$entity', payload);
   }
 

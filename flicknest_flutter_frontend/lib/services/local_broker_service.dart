@@ -89,4 +89,23 @@ class LocalBrokerService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>?> getAllSymbols() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl${AppConstants.symbolsEndpoint}'),
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw Exception('Request timed out'),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      throw Exception('Failed to fetch symbols. Status: ${response.statusCode}');
+    } catch (e) {
+      print('Error fetching symbols: $e');
+      throw Exception('Local broker connection failed: $e');
+    }
+  }
 }

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import 'dart:io';
+import '../services/local_broker_service.dart';
 import '../services/local_websocket_service.dart';
 
 final brokerSettingsProvider = StateNotifierProvider<BrokerSettingsNotifier, bool>((ref) {
@@ -13,36 +14,73 @@ final brokerSettingsProvider = StateNotifierProvider<BrokerSettingsNotifier, boo
 
 class BrokerSettingsNotifier extends StateNotifier<bool> {
   static const String _key = 'useLocalBroker';
-  static const String _localDbPath = 'local_db.json';
   final FirebaseDatabase _firebaseDb = FirebaseDatabase.instance;
   final LocalWebSocketService _webSocketService = LocalWebSocketService();
 
   BrokerSettingsNotifier() : super(false) {
     _loadPreference();
-    _webSocketService.connect();
   }
 
   Future<void> _loadPreference() async {
     final prefs = await SharedPreferences.getInstance();
     state = prefs.getBool(_key) ?? false;
+    if (state) {
+      await _firebaseDb.goOffline();
+      _webSocketService.connect();
+    }
+  }
+
+  Future<void> _syncToFirebase() async {
+    try {
+      // Get current local state
+      final localBrokerService = LocalBrokerService();
+      final symbols = await localBrokerService.getAllSymbols();
+
+      if (symbols != null) {
+        print('Syncing local changes to Firebase...');
+        // Update Firebase with local data
+        for (var entry in symbols.entries) {
+          final symbolId = entry.key;
+          final symbolData = entry.value;
+          await _firebaseDb.ref('symbols/$symbolId').update(symbolData);
+          print('Synced symbol $symbolId to Firebase');
+        }
+        print('Successfully synced all local changes to Firebase');
+      }
+    } catch (e) {
+      print('Error syncing to Firebase: $e');
+      throw e;
+    }
   }
 
   Future<void> toggleBrokerMode() async {
     final prefs = await SharedPreferences.getInstance();
-    state = !state;
-    await prefs.setBool(_key, state);
-    await _handleBrokerModeChange();
-  }
 
-  Future<void> _handleBrokerModeChange() async {
-    if (state) {
-      // Switch to local broker mode
-      await _firebaseDb.goOffline();
-      // No need to set local URL or interact with Firebase
-    } else {
-      // Switch to online Firebase mode
-      await _firebaseDb.goOnline();
-      // Use default Firebase URL
+    try {
+      if (state) {
+        // Switching from local to online
+        print('Switching from local to online mode...');
+        // First sync all local changes to Firebase
+        await _syncToFirebase();
+        // Then disconnect local connections
+        _webSocketService.disconnect();
+        // Finally enable Firebase
+        await _firebaseDb.goOnline();
+      } else {
+        // Switching from online to local
+        print('Switching from online to local mode...');
+        await _firebaseDb.goOffline();
+        _webSocketService.connect();
+      }
+
+      // Update state after successful switch
+      state = !state;
+      await prefs.setBool(_key, state);
+      print('Successfully switched to ${state ? "local" : "online"} mode');
+
+    } catch (e) {
+      print('Error switching modes: $e');
+      throw Exception('Failed to switch network mode: $e');
     }
   }
 
@@ -64,13 +102,12 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
 
   Future<void> saveData(String entity, String id, dynamic data) async {
     if (state) {
-      // Local mode: update via WebSocket
+      // Local mode: update via WebSocket only
       _webSocketService.updateEntity(entity, id, data);
     } else {
-      // Online mode: update both Firebase and local
+      // Online mode: update Firebase only
       final ref = _firebaseDb.ref('$entity/$id');
       await ref.set(data);
-      _webSocketService.updateEntity(entity, id, data);
     }
   }
 

@@ -131,14 +131,6 @@ class SettingsEnvironmentSection extends ConsumerWidget {
                 title: const Text('Invitations'),
                 onTap: () => context.push(InvitationsPage.route),
               ),
-              SwitchListTile(
-                title: const Text('Use Local Broker'),
-                subtitle: const Text('Toggle between local and online broker mode'),
-                value: useLocalBroker,
-                onChanged: (bool value) {
-                  ref.read(brokerSettingsProvider.notifier).toggleBrokerMode();
-                },
-              ),
             ],
           ),
         ),
