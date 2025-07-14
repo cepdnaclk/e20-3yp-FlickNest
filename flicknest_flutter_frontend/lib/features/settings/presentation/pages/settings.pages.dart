@@ -66,7 +66,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SettingsDeviceSection(),
             const SettingsHelpSection(),
             const SettingsVersionSection(),
-            const SettingsLocalBrokerSection(),
           ],
         ),
       ),

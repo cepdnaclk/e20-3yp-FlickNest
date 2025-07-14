@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsLocalBrokerSection extends StatefulWidget {
-  const SettingsLocalBrokerSection({Key? key}) : super(key: key);
+  final VoidCallback? onSave;
+
+  const SettingsLocalBrokerSection({Key? key, this.onSave}) : super(key: key);
 
   @override
   State<SettingsLocalBrokerSection> createState() => _SettingsLocalBrokerSectionState();
@@ -33,6 +35,7 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
     await prefs.setString('local_broker_ip', _ipController.text);
     await prefs.setString('local_broker_port', _portController.text);
     await prefs.setString('local_broker_wifi', _wifiController.text);
+    if (widget.onSave != null) widget.onSave!();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Local broker settings saved!')),
     );
@@ -48,41 +51,106 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Local Broker Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ipController,
-              decoration: const InputDecoration(labelText: 'Broker IP'),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _ipController,
+          decoration: InputDecoration(
+            labelText: 'Broker IP',
+            hintText: '192.168.1.100',
+            prefixIcon: Icon(Icons.lan, color: theme.colorScheme.primary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _portController,
-              decoration: const InputDecoration(labelText: 'Broker Port'),
-              keyboardType: TextInputType.number,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline,
+              ),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _wifiController,
-              decoration: const InputDecoration(labelText: 'WiFi SSID'),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _saveBrokerSettings,
-              child: const Text('Save'),
-            ),
-          ],
+          ),
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
         ),
-      ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _portController,
+          decoration: InputDecoration(
+            labelText: 'Broker Port',
+            hintText: '1883',
+            prefixIcon: Icon(Icons.numbers, color: theme.colorScheme.primary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+            ),
+          ),
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _wifiController,
+          decoration: InputDecoration(
+            labelText: 'WiFi SSID',
+            hintText: 'Your WiFi Network Name',
+            prefixIcon: Icon(Icons.wifi, color: theme.colorScheme.primary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.save_rounded),
+            label: const Text('Save Settings'),
+            onPressed: () {
+              _saveBrokerSettings();
+            },
+          ),
+        ),
+      ],
     );
   }
 }
-
 
