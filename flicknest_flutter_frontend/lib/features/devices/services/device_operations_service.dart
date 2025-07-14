@@ -50,6 +50,20 @@ class DeviceOperationsService {
     }
   }
 
+  Future<void> _syncSymbolState(String symbolId, bool newState) async {
+    try {
+      final symbolRef = FirebaseDatabase.instance.ref('symbols/$symbolId');
+      await symbolRef.update({
+        'state': newState,
+        'source': AppConstants.deviceSourceMobile
+      });
+      print('📱 Symbol $symbolId state updated to: $newState');
+    } catch (e) {
+      print('🔴 Error updating symbol state: $e');
+      rethrow;
+    }
+  }
+
   Future<void> _updateFirebaseDeviceState(
     String deviceId,
     String symbolKey,
@@ -61,17 +75,91 @@ class DeviceOperationsService {
     try {
       final deviceRef = FirebaseDatabase.instance
           .ref('environments/$environmentId/devices/$deviceId');
+
+      // Update device state
       await deviceRef.update({'state': newState});
 
       if (!silent) {
-        final symbolRef = FirebaseDatabase.instance.ref('symbols/$symbolKey');
-        await symbolRef.update({
-          'state': newState,
-          'source': AppConstants.deviceSourceMobile
-        });
+        // Update symbol state to match device state
+        await _syncSymbolState(symbolKey, newState);
       }
     } catch (e) {
       print('🔴 Firebase state update failed: $e');
+      rethrow;
+    }
+  }
+
+  StreamSubscription<DatabaseEvent> listenToSymbolStateChanges(
+    Function(String, bool) onSymbolStateChanged
+  ) {
+    return FirebaseDatabase.instance.ref('symbols').onChildChanged.listen((event) async {
+      final symbolId = event.snapshot.key;
+      final symbolData = event.snapshot.value as Map?;
+      if (symbolId == null || symbolData == null) return;
+      if (!symbolData.containsKey('state')) return;
+
+      final bool symbolState = symbolData['state'];
+      onSymbolStateChanged(symbolId, symbolState);
+
+      // Update all devices using this symbol
+      if (environmentId != null) {
+        try {
+          final devicesRef = FirebaseDatabase.instance.ref('environments/$environmentId/devices');
+          final snapshot = await devicesRef.get();
+
+          if (snapshot.exists) {
+            final devices = Map<String, dynamic>.from(snapshot.value as Map);
+
+            // Find and update all devices assigned to this symbol
+            for (final entry in devices.entries) {
+              final deviceId = entry.key;
+              final deviceData = Map<String, dynamic>.from(entry.value as Map);
+
+              if (deviceData['assignedSymbol'] == symbolId) {
+                // Update device state to match symbol state
+                await devicesRef.child(deviceId).update({
+                  'state': symbolState
+                });
+              }
+            }
+          }
+        } catch (e) {
+          print('🔴 Error syncing devices with symbol state: $e');
+        }
+      }
+    });
+  }
+
+  Future<void> syncLocalChangesToFirebase() async {
+    if (environmentId == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'local_states_$environmentId';
+      final storedStates = prefs.getString(key);
+
+      if (storedStates != null) {
+        final states = Map<String, dynamic>.from(json.decode(storedStates));
+        final dbRef = FirebaseDatabase.instance.ref('environments/$environmentId/devices');
+
+        for (final entry in states.entries) {
+          final deviceId = entry.key;
+          final deviceData = entry.value as Map<String, dynamic>;
+          final bool state = deviceData['state'];
+          final String symbolKey = deviceData['symbolKey'];
+
+          // Update both device and symbol states
+          await Future.wait([
+            dbRef.child(deviceId).update({'state': state}),
+            _syncSymbolState(symbolKey, state),
+          ]);
+        }
+
+        // Clear local states after successful sync
+        await prefs.remove(key);
+      }
+    } catch (e) {
+      print('🔴 Error syncing to Firebase: $e');
       rethrow;
     }
   }
@@ -83,8 +171,11 @@ class DeviceOperationsService {
       final deviceRef = FirebaseDatabase.instance
           .ref('environments/$environmentId/devices/$deviceId');
       await deviceRef.update({'roomId': targetRoomId ?? 'unassigned'});
+
+      print('📱 Device $deviceId moved to room $targetRoomId');
     } catch (e) {
-      throw Exception('Error moving device: $e');
+      print('🔴 Error moving device: $e');
+      rethrow;
     }
   }
 
@@ -114,57 +205,11 @@ class DeviceOperationsService {
             .ref('environments/$environmentId/rooms/$roomId/devices');
         await roomRef.child(newDeviceKey).set(true);
       }
+
+      print('📱 Added new device: $deviceName with symbol: $symbolId to room: $roomId');
     } catch (e) {
-      throw Exception('Error adding device: $e');
-    }
-  }
-
-  Future<void> syncLocalChangesWithFirebase() async {
-    if (environmentId == null) return;
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final localDeviceStates = prefs.getString('local_device_states_$environmentId');
-
-      if (localDeviceStates != null) {
-        final Map<String, dynamic> states = json.decode(localDeviceStates);
-        final dbRef = FirebaseDatabase.instance.ref('environments/$environmentId/devices');
-
-        // Get current Firebase states
-        final snapshot = await dbRef.get();
-        if (!snapshot.exists) return;
-
-        final firebaseDevices = Map<String, dynamic>.from(snapshot.value as Map);
-
-        // Update Firebase with local states
-        for (final entry in states.entries) {
-          final deviceId = entry.key;
-          final bool localState = entry.value;
-
-          if (firebaseDevices.containsKey(deviceId)) {
-            await dbRef.child(deviceId).update({'state': localState});
-          }
-        }
-
-        // Clear local states after successful sync
-        await prefs.remove('local_device_states_$environmentId');
-      }
-    } catch (e) {
-      print('Error syncing local changes with Firebase: $e');
+      print('🔴 Error adding device: $e');
       rethrow;
     }
-  }
-
-  StreamSubscription<DatabaseEvent> listenToSymbolStateChanges(
-    Function(String, bool) onSymbolStateChanged
-  ) {
-    return FirebaseDatabase.instance.ref('symbols').onChildChanged.listen((event) {
-      final symbolId = event.snapshot.key;
-      final symbolData = event.snapshot.value as Map?;
-      if (symbolId == null || symbolData == null) return;
-      if (!symbolData.containsKey('state')) return;
-
-      onSymbolStateChanged(symbolId, symbolData['state'] as bool);
-    });
   }
 }
