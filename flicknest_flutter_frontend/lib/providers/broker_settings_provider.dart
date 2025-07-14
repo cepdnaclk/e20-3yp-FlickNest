@@ -25,31 +25,9 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
     final prefs = await SharedPreferences.getInstance();
     state = prefs.getBool(_key) ?? false;
     if (state) {
+      // If starting in local mode, disconnect from Firebase
       await _firebaseDb.goOffline();
       _webSocketService.connect();
-    }
-  }
-
-  Future<void> _syncToFirebase() async {
-    try {
-      // Get current local state
-      final localBrokerService = LocalBrokerService();
-      final symbols = await localBrokerService.getAllSymbols();
-
-      if (symbols != null) {
-        print('Syncing local changes to Firebase...');
-        // Update Firebase with local data
-        for (var entry in symbols.entries) {
-          final symbolId = entry.key;
-          final symbolData = entry.value;
-          await _firebaseDb.ref('symbols/$symbolId').update(symbolData);
-          print('Synced symbol $symbolId to Firebase');
-        }
-        print('Successfully synced all local changes to Firebase');
-      }
-    } catch (e) {
-      print('Error syncing to Firebase: $e');
-      throw e;
     }
   }
 
@@ -59,17 +37,17 @@ class BrokerSettingsNotifier extends StateNotifier<bool> {
     try {
       if (state) {
         // Switching from local to online
-        print('Switching from local to online mode...');
-        // First sync all local changes to Firebase
-        await _syncToFirebase();
-        // Then disconnect local connections
+        print('Switching to online mode...');
+        // First disconnect local connections
         _webSocketService.disconnect();
-        // Finally enable Firebase
+        // Enable Firebase
         await _firebaseDb.goOnline();
       } else {
         // Switching from online to local
-        print('Switching from online to local mode...');
+        print('Switching to local mode...');
+        // Disconnect from Firebase first
         await _firebaseDb.goOffline();
+        // Then connect to local broker
         _webSocketService.connect();
       }
 

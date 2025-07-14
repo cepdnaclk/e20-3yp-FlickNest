@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 import '../constants.dart';
 
 class LocalBrokerConfig {
@@ -15,19 +16,21 @@ class LocalBrokerConfig {
   static Future<String> getBrokerUrl() async {
     final ip = await getBrokerIp();
     final port = await getBrokerPort();
-    return 'http://$ip:$port';
+    final url = 'http://$ip:$port';
+    print('🔵 Local Broker URL: $url');  // Debug log
+    return url;
   }
 
   static String _defaultIp() {
-    final url = AppConstants.localBrokerUrl;
-    final uri = Uri.tryParse(url);
-    return uri?.host ?? '10.0.2.2';
+    if (Platform.isAndroid) {
+      // Use 10.0.2.2 for Android emulator to access host machine's localhost
+      return '10.0.2.2';
+    }
+    return 'localhost';
   }
 
   static String _defaultPort() {
-    final url = AppConstants.localBrokerUrl;
-    final uri = Uri.tryParse(url);
-    return uri?.port.toString() ?? '5000';
+    return '5000';
   }
 }
 

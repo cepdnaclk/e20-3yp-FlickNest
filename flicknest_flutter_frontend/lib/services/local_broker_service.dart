@@ -1,65 +1,60 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants.dart';
+import '../helpers/local_broker_config.dart';
 
 class LocalBrokerService {
-  static final LocalBrokerService _instance = LocalBrokerService._internal();
-  factory LocalBrokerService() => _instance;
-  LocalBrokerService._internal();
+  static LocalBrokerService? _instance;
+  static LocalBrokerService get instance {
+    _instance ??= LocalBrokerService._internal();
+    return _instance!;
+  }
 
-  String get _baseUrl => AppConstants.localBrokerUrl;
+  LocalBrokerService._internal();
 
   Future<dynamic> updateSymbolState(String symbolKey, bool state) async {
     try {
-      final url = Uri.parse('$_baseUrl${AppConstants.symbolsEndpoint}/$symbolKey');
-      final data = {'state': state ? 'on' : 'off'};
-      final bodyJson = json.encode(data);
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
+      // Use simple endpoint structure
+      final url = Uri.parse('$brokerUrl/symbols/$symbolKey');
+      final data = {'state': state}; // Send boolean state
 
-      // Debug prints
-      print('🔵 Request Details:');
+      print('🔵 Sending to Local Broker:');
       print('URL: $url');
-      print('Headers: ${{'Content-Type': 'application/json'}}');
-      print('Body: $data');
+      print('Payload: $data');
 
-      // Create and send request with increased timeout
       final response = await http.patch(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: bodyJson,
+        body: json.encode(data),
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 5),
         onTimeout: () {
-          print('🔴 Request timed out');
-          throw Exception('Request timed out - Check if the server is running and accessible');
+          print('🔴 Local broker timeout');
+          throw Exception('Connection to local broker timed out');
         },
       );
 
-      // Debug response
-      print('🟢 Response Details:');
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      print('🟢 Local Broker Response:');
+      print('Status: ${response.statusCode}');
+      print('Body: ${response.body}');
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update state: ${response.statusCode}');
       }
 
-      throw Exception('Failed to update symbol state. Status: ${response.statusCode}, Body: ${response.body}');
+      return json.decode(response.body);
     } catch (e) {
-      print('🔴 Error Details:');
-      print('Error Type: ${e.runtimeType}');
-      print('Error Message: $e');
-
-      if (e.toString().contains('Connection refused')) {
-        throw Exception('Cannot connect to local broker - Please ensure the server is running at $_baseUrl');
-      }
-      throw Exception('Local broker connection failed: $e');
+      print('🔴 Local Broker Error: $e');
+      rethrow;
     }
   }
 
   Future<dynamic> fetchData(String path) async {
     try {
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
       final response = await http.get(
-        Uri.parse('$_baseUrl/$path'),
+        Uri.parse('$brokerUrl/$path'),
       ).timeout(
         const Duration(seconds: 5),
         onTimeout: () => throw Exception('Request timed out'),
@@ -77,8 +72,9 @@ class LocalBrokerService {
 
   Future<bool> checkConnection() async {
     try {
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
       final response = await http.get(
-        Uri.parse('$_baseUrl${AppConstants.healthEndpoint}'),
+        Uri.parse('$brokerUrl${AppConstants.healthEndpoint}'),
       ).timeout(
         const Duration(seconds: 3),
       );
@@ -92,8 +88,9 @@ class LocalBrokerService {
 
   Future<Map<String, dynamic>?> getAllSymbols() async {
     try {
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
       final response = await http.get(
-        Uri.parse('$_baseUrl${AppConstants.symbolsEndpoint}'),
+        Uri.parse('$brokerUrl${AppConstants.symbolsEndpoint}'),
       ).timeout(
         const Duration(seconds: 5),
         onTimeout: () => throw Exception('Request timed out'),
