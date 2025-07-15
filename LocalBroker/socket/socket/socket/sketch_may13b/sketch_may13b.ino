@@ -14,9 +14,11 @@
 const char* LOCAL_BROKER = "10.42.0.1";  
 const int LOCAL_PORT = 1883;
 const char* LOCAL_TOPIC = "esp/control";
-const char* LOCAL_SSID = "Flicknest";
+const char* LOCAL_SSID = "flicknest";
 String connectedSSID;
+
 #define SWITCH_PIN 22
+#define check 2
 
 #define SUB_TOPIC "esp32/pub"  // Subscribing to the publisher topic
 #define SUB_TOPIC2 "firebase/device-control"
@@ -170,6 +172,7 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
     if (symbol) {
       int currentState = digitalRead(SWITCH_PIN);    
       digitalWrite(SWITCH_PIN, !currentState); // this changes the out pin according to the hand band input 
+      digitalWrite(check, !currentState);
     } else {
       Serial.print("Not the correct symbol for me");
     }
@@ -184,7 +187,8 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
     Serial.println(state);
 
     if (name.equalsIgnoreCase(symbol_name)) {
-      digitalWrite(SWITCH_PIN, state ? HIGH : LOW);// this changes the out pin according to the mobile input 
+      digitalWrite(SWITCH_PIN, state ? HIGH : LOW);// this changes the out pin according to the mobile input
+      digitalWrite(check, state ? HIGH : LOW);
     } else {
       Serial.println("updown not detected. No action.");
     }
@@ -197,7 +201,7 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
 void connectToBroker() {
   Serial.println("Connecting to MQTT Broker...");
   while (!mqttClient.connected()) {
-    if (mqttClient.connect("ESP32Client")) {
+    if (mqttClient.connect("ESP32Client_Socket")) {
       Serial.println("Connected to MQTT broker");
 
       // Subscribe to ONLY esp/control
@@ -230,7 +234,7 @@ void clearWiFiCredentials() {
 void setup() {
   Serial.begin(115200);
   pinMode(SWITCH_PIN, OUTPUT);
-
+  pinMode(check, OUTPUT);
   WiFi.onEvent(SysProvEvent);
 
   // Check if device has stored WiFi credentials
@@ -269,7 +273,7 @@ void setup() {
     Serial.println("Starting BLE provisioning...");
     
     // Sample uuid that user can pass during provisioning using BLE
-    uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02};
+    uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x01}; // Changed last byte to 01
     WiFiProv.beginProvision(
       NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BLE, NETWORK_PROV_SECURITY_1, pop, service_name, service_key, uuid, reset_provisioned
     );

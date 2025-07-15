@@ -14,9 +14,10 @@
 const char* LOCAL_BROKER = "10.42.0.1";  
 const int LOCAL_PORT = 1883;
 const char* LOCAL_TOPIC = "esp/control";
-const char* LOCAL_SSID = "Flicknest";
+const char* LOCAL_SSID = "flicknest";
 String connectedSSID;
 #define BULB_PIN 18
+#define check 2
 
 #define SUB_TOPIC "esp32/pub"  // Subscribing to the publisher topic
 #define SUB_TOPIC2 "firebase/device-control"
@@ -36,6 +37,10 @@ WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 unsigned long lastWiFiAttempt = 0;
 const unsigned long wifiRetryInterval = 500; 
+
+// Add timing variables for MQTT reconnection
+unsigned long lastMqttAttempt = 0;
+const unsigned long mqttRetryInterval = 5000; // 5 seconds between reconnection attempts 
 
 //local broker config 
 WiFiClient localNet;
@@ -152,6 +157,13 @@ void connectAWS() {
 void messageReceived(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.println(topic);
+  
+  // Print the payload for debugging
+  Serial.print("Payload: ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
 
   StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, payload, length);
@@ -169,7 +181,11 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
 
     if (symbol) {
       int currentState = digitalRead(BULB_PIN);    
+      Serial.print("Current BULB_PIN state: ");
+      Serial.println(currentState);
       digitalWrite(BULB_PIN, !currentState); // this changes the out pin according to the hand band input 
+      Serial.print("New BULB_PIN state: ");
+      Serial.println(digitalRead(BULB_PIN));
     } else {
       Serial.print("Not the correct symbol for me");
     }
@@ -184,7 +200,11 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
     Serial.println(state);
 
     if (name.equalsIgnoreCase(symbol_name)) {
+      Serial.print("Setting BULB_PIN to: ");
+      Serial.println(state ? "HIGH" : "LOW");
       digitalWrite(BULB_PIN, state ? HIGH : LOW);// this changes the out pin according to the mobile input 
+      Serial.print("BULB_PIN current state: ");
+      Serial.println(digitalRead(BULB_PIN));
     } else {
       Serial.println("updown not detected. No action.");
     }
@@ -194,19 +214,28 @@ void messageReceived(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-void connectToBroker() {
+bool connectToBroker() {
   Serial.println("Connecting to MQTT Broker...");
-  while (!mqttClient.connected()) {
-    if (mqttClient.connect("ESP32Client")) {
-      Serial.println("Connected to MQTT broker");
-
-      // Subscribe to ONLY esp/control
-      mqttClient.subscribe(LOCAL_TOPIC);
+  
+  // Try to connect only once, don't loop
+  Serial.print("Attempting MQTT connection...");
+  
+  if (mqttClient.connect("ESP32Client_Bulb")) {
+    Serial.println(" Connected to MQTT broker");
+    
+    // Subscribe to topic after successful connection
+    if (mqttClient.subscribe(LOCAL_TOPIC)) {
       Serial.println("Subscribed to: esp/control");
+      return true;
     } else {
-      Serial.print(".");
-      delay(500);
+      Serial.println("Failed to subscribe");
+      return false;
     }
+  } else {
+    Serial.print(" Failed, rc=");
+    Serial.print(mqttClient.state());
+    Serial.println(" Will retry later...");
+    return false;
   }
 }
 
@@ -230,7 +259,18 @@ void clearWiFiCredentials() {
 void setup() {
   Serial.begin(115200);
   pinMode(BULB_PIN, OUTPUT);
-
+  pinMode(BULB_PIN, OUTPUT);
+  
+  // Test GPIO18 functionality
+  Serial.println("Testing GPIO18...");
+  digitalWrite(BULB_PIN, HIGH);
+  Serial.print("GPIO18 set HIGH, reading: ");
+  Serial.println(digitalRead(BULB_PIN));
+  delay(500);
+  digitalWrite(BULB_PIN, LOW);
+  Serial.print("GPIO18 set LOW, reading: ");
+  Serial.println(digitalRead(BULB_PIN));
+  
   WiFi.onEvent(SysProvEvent);
 
   // Check if device has stored WiFi credentials
@@ -269,7 +309,7 @@ void setup() {
     Serial.println("Starting BLE provisioning...");
     
     // Sample uuid that user can pass during provisioning using BLE
-    uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02};
+    uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02}; // Keep as 02
     WiFiProv.beginProvision(
       NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BLE, NETWORK_PROV_SECURITY_1, pop, service_name, service_key, uuid, reset_provisioned
     );
@@ -292,7 +332,13 @@ void setup() {
     mqttClient.setClient(localNet);
     mqttClient.setServer(LOCAL_BROKER, LOCAL_PORT);
     mqttClient.setCallback(messageReceived);
-    connectToBroker();
+    
+    // Try to connect to MQTT broker
+    if (connectToBroker()) {
+      Serial.println("Initial MQTT connection successful");
+    } else {
+      Serial.println("Initial MQTT connection failed - will retry in loop");
+    }
   } else {
     useLocal = false;
     connectAWS();
@@ -310,10 +356,24 @@ void loop() {
   }
   
   if (connectedSSID == LOCAL_SSID) {
+    // Check MQTT connection with timing to prevent spam
     if (!mqttClient.connected()) {
-      connectToBroker();
+      unsigned long currentTime = millis();
+      if (currentTime - lastMqttAttempt >= mqttRetryInterval) {
+        Serial.print("MQTT disconnected, state: ");
+        Serial.println(mqttClient.state());
+        
+        if (connectToBroker()) {
+          Serial.println("MQTT reconnection successful");
+        } else {
+          Serial.println("MQTT reconnection failed");
+        }
+        lastMqttAttempt = currentTime;
+      }
+    } else {
+      // Only call mqttClient.loop() if connected
+      mqttClient.loop();
     }
-    mqttClient.loop();
   } else {
     if (!client.connected()) {
       connectAWS();
