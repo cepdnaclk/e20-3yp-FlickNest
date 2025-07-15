@@ -52,7 +52,7 @@ class SettingsNetworkSection extends ConsumerWidget {
                       final envId = ref.read(currentEnvironmentProvider);
                       if (envId != null) {
                         final deviceOpsService = DeviceOperationsService(envId);
-                        await deviceOpsService.syncLocalChangesWithFirebase();
+                        await deviceOpsService.syncLocalChangesToFirebase();
                       }
                     } catch (e) {
                       if (context.mounted) {
