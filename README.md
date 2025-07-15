@@ -12,6 +12,11 @@ ___
 
 ---
 
+## Supervisor
+-  Dr. Isuru Nawinne , [isurunawinne@eng.pdn.ac.lk](mailto:isurunawinne@eng.pdn.ac.lk)
+
+---
+
 #### Table of Contents
 1. [Introduction](#introduction)
 2. [Solution Architecture](#solution-architecture)
