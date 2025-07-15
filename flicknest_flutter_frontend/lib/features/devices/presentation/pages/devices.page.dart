@@ -6,6 +6,7 @@ import '../../../../providers/environment/environment_provider.dart';
 import '../../../../providers/role/role_provider.dart';
 import '../../../../providers/network/network_mode_provider.dart';
 import '../../../../constants.dart';
+import '../../../../services/local_websocket_service.dart';
 import '../widgets/device_card.dart';
 import '../widgets/room_card.dart';
 import '../../services/device_operations_service.dart';
@@ -53,26 +54,85 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
 
   void _setupSymbolStateListener() {
     final networkMode = ref.read(networkModeProvider);
-    if (networkMode != NetworkMode.online) return;
 
-    _symbolStateSubscription = _deviceOpsService.listenToSymbolStateChanges(
-      (symbolId, newState) async {
-        // Update all devices using this symbol
-        if (_environmentId == null) return;
-        final devicesRef = FirebaseDatabase.instance.ref('environments/$_environmentId/devices');
-        final devicesSnapshot = await devicesRef.get();
-        if (!devicesSnapshot.exists) return;
+    if (networkMode == NetworkMode.local) {
+      // Initialize WebSocket first
+      final webSocketService = LocalWebSocketService();
+      webSocketService.connect().then((_) {
+        // Only set up listener after connection is established
+        webSocketService.listenUpdates((data) {
+          print('🔵 WebSocket update received: $data');
 
-        final devices = Map<String, dynamic>.from(devicesSnapshot.value as Map);
-        for (final entry in devices.entries) {
-          final deviceId = entry.key;
-          final device = Map<String, dynamic>.from(entry.value as Map);
-          if (device['assignedSymbol'] == symbolId) {
-            await devicesRef.child(deviceId).update({'state': newState});
+          try {
+            if (data is Map) {
+              final symbolEntry = data.entries.first;
+              final symbolId = symbolEntry.key;
+              final symbolData = symbolEntry.value as Map<String, dynamic>;
+              final bool state = symbolData['state'] as bool;
+
+              print('📱 Processing symbol: $symbolId, new state: $state');
+
+              if (mounted) {
+                setState(() {
+                  // Update states of all devices using this symbol
+                  _devicesByRoom.forEach((roomId, roomData) {
+                    final devices = roomData['devices'] as Map<String, dynamic>;
+                    devices.forEach((deviceId, deviceData) {
+                      if (deviceData['assignedSymbol'] == symbolId) {
+                        print('🔄 Updating device $deviceId state to $state');
+                        deviceData['state'] = state;
+                      }
+                    });
+                  });
+
+                  // Update unassigned devices
+                  for (var device in _unassignedDevices) {
+                    if (device['assignedSymbol'] == symbolId) {
+                      print('🔄 Updating unassigned device ${device['id']} state to $state');
+                      device['state'] = state;
+                    }
+                  }
+                });
+              }
+            }
+          } catch (e) {
+            print('🔴 Error processing WebSocket update: $e');
           }
+        });
+      }).catchError((error) {
+        print('🔴 Error connecting to WebSocket: $error');
+      });
+    } else {
+      // Online mode - use existing Firebase listener
+      _symbolStateSubscription = _deviceOpsService.listenToSymbolStateChanges(
+        (symbolId, newState) {
+          if (!mounted) return;
+          setState(() {
+            // Update UI for all devices using this symbol
+            _updateDevicesWithSymbol(symbolId, newState);
+          });
+        },
+      );
+    }
+  }
+
+  void _updateDevicesWithSymbol(String symbolId, bool newState) {
+    // Update devices in rooms
+    _devicesByRoom.forEach((roomId, roomData) {
+      final devices = roomData['devices'] as Map<String, dynamic>;
+      devices.forEach((deviceId, deviceData) {
+        if (deviceData['assignedSymbol'] == symbolId) {
+          deviceData['state'] = newState;
         }
-      },
-    );
+      });
+    });
+
+    // Update unassigned devices
+    for (var device in _unassignedDevices) {
+      if (device['assignedSymbol'] == symbolId) {
+        device['state'] = newState;
+      }
+    }
   }
 
   void _setupDevicesListener() {

@@ -1,104 +1,145 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'dart:convert';
-import '../constants.dart';
+import '../helpers/local_broker_config.dart';
 
 class LocalWebSocketService {
   static final LocalWebSocketService _instance = LocalWebSocketService._internal();
-  factory LocalWebSocketService() => _instance;
+  IO.Socket? _socket;
+  bool _isConnected = false;
+  Function(dynamic)? _updateCallback;
+
+  factory LocalWebSocketService() {
+    return _instance;
+  }
+
   LocalWebSocketService._internal();
 
-  late IO.Socket socket;
-  bool _connected = false;
+  bool get isConnected => _isConnected;
 
-  bool get isConnected => _connected;
+  Future connect() async {
+    if (_isConnected) return;
 
-  void connect() {
-    final url = AppConstants.isEmulator
-        ? AppConstants.localBrokerUrl.replaceAll('http://', 'ws://')
-        : AppConstants.localWebSocketUrl;
+    try {
+      final brokerUrl = await LocalBrokerConfig.getBrokerUrl();
+      print('🔵 Connecting to Socket.IO server at: $brokerUrl');
 
-    print('Connecting to WebSocket at: $url');
+      _socket = IO.io(brokerUrl,
+          IO.OptionBuilder()
+              .setTransports(['websocket'])
+              .disableAutoConnect()
+              .build()
+      );
 
-    socket = IO.io(
-      url,
-      IO.OptionBuilder()
-        .setTransports(['websocket'])
-        .enableReconnection()
-        .setReconnectionAttempts(5)
-        .setReconnectionDelay(5000)
-        .setQuery({'protocol': 'socket.io'})
-        .build()
-    );
+      _socket?.onConnect((_) {
+        print('🔵 Connected to Socket.IO server');
+        _isConnected = true;
+      });
 
-    _setupSocketListeners();
+      _socket?.on('update', (data) {
+        print('📩 Socket.IO update received: $data');
+        try {
+          if (data is Map) {
+            String symbolId = data.keys.first.toString();
+            var symbolDataRaw = data[symbolId];
+            Map<String, dynamic> symbolData = {};
+            if (symbolDataRaw is Map) {
+              symbolDataRaw.forEach((k, v) {
+                symbolData[k.toString()] = v;
+              });
+            }
+            dynamic stateRaw = symbolData['state'];
+            bool state;
+            if (stateRaw is String) {
+              state = stateRaw.toLowerCase() == 'on' || stateRaw.toLowerCase() == 'true';
+              print('stateRaw is String');
+            } else if (stateRaw is bool) {
+              state = stateRaw;
+            } else {
+              state = false;
+            }
+            print('📱 Processing symbol: $symbolId, new state: $state');
+            if (_updateCallback != null) {
+              _updateCallback!(data);
+            }
+          } else {
+            print('⚠️ Unexpected data format: $data');
+          }
+        } catch (e) {
+          print('🔴 Error processing Socket.IO update: $e');
+        }
+      });
+
+      _socket?.onDisconnect((_) {
+        print('🔴 Disconnected from Socket.IO server');
+        _isConnected = false;
+        // Try to reconnect
+        Future.delayed(const Duration(seconds: 5), () {
+          if (!_isConnected) {
+            print('🔄 Attempting to reconnect...');
+            connect();
+          }
+        });
+      });
+
+      _socket?.connect();
+
+    } catch (e) {
+      print('🔴 Socket.IO connection failed: $e');
+      _isConnected = false;
+      // Try to reconnect after failure
+      Future.delayed(const Duration(seconds: 5), () {
+        if (!_isConnected) {
+          print('🔄 Attempting to reconnect...');
+          connect();
+        }
+      });
+    }
   }
 
-  void _setupSocketListeners() {
-    socket.onConnect((_) {
-      print('WebSocket Connected successfully');
-      _connected = true;
-    });
-
-    socket.onDisconnect((_) {
-      print('WebSocket Disconnected');
-      _connected = false;
-    });
-
-    socket.onConnectError((error) {
-      print('WebSocket Connection Error: $error');
-      _connected = false;
-    });
-
-    socket.onError((error) {
-      print('WebSocket Error: $error');
-      _connected = false;
-    });
-
-    // Clear any existing listeners before connecting
-    socket.clearListeners();
-    socket.connect();
-  }
-
-  void disconnect() {
-    print('Disconnecting WebSocket');
-    socket.disconnect();
-    socket.dispose();
-    _connected = false;
-  }
-
-  void requestAll(String entity, Function(dynamic) onData) {
-    if (!_connected) {
-      print('WebSocket not connected, attempting to connect...');
-      connect();
+  void updateEntity(String entity, String id, dynamic data) {
+    if (!_isConnected) {
+      print('⚠️ Socket not connected');
       return;
     }
 
-    socket.emit('request_all_$entity');
-    socket.on('all_$entity', (data) {
-      onData(data);
-    });
-  }
-
-  void updateEntity(String entity, String id, Map<String, dynamic> data) {
-    if (!_connected) {
-      print('WebSocket not connected, cannot update entity');
-      return;
-    }
-
-    final payload = jsonEncode({
+    final message = {
+      'type': 'update',
+      'entity': entity,
       'id': id,
       'data': data,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
+    };
 
-    print('Emitting update via WebSocket: $payload');
-    socket.emit('update_$entity', payload);
+    print('📤 Emitting update: $message');
+    _socket?.emit('update', message);
   }
 
-  void listenUpdates(Function(dynamic) onUpdate) {
-    socket.on('update', (data) {
-      onUpdate(data);
-    });
+  void listenUpdates(Function(dynamic) callback) {
+    _updateCallback = callback;
+  }
+
+  void requestAll(String entity, Function(dynamic) callback) {
+    if (!_isConnected) {
+      print('⚠️ Socket not connected');
+      return;
+    }
+
+    _updateCallback = callback;
+
+    final request = {
+      'entity': entity,
+      'action': 'getAll'
+    };
+
+    print('📤 Requesting all $entity');
+    _socket?.emit('request', request);
+  }
+
+  Future disconnect() async {
+    _socket?.disconnect();
+    _socket?.dispose();
+    _isConnected = false;
+    _updateCallback = null;
+    print('🔵 Socket.IO disconnected');
   }
 }
+
 
