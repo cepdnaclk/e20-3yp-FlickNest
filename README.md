@@ -125,7 +125,7 @@ FlickNest successfully demonstrates a reliable, gesture-based automation system 
 ## Links
 
 - [Project Repository](https://github.com/cepdnaclk/e20-3yp-FlickNest.git)
-- [Project Page](cepdnaclk.github.io/e20-3yp-FlickNest/)
+- [Project Page](https://cepdnaclk.github.io/e20-3yp-FlickNest/)
 - [Department of Computer Engineering](http://www.ce.pdn.ac.lk/)
 - [University of Peradeniya](https://eng.pdn.ac.lk/)
 
