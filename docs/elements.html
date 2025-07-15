@@ -38,32 +38,36 @@
 
                 <!-- Gesture Recognition -->
                 <h2>Gesture Recognition</h2>
-                <p>Our gesture-controlled home automation system uses advanced machine learning algorithms to map hand movements into precise control signals, enabling seamless and intuitive smart device automation.</p>
+                <p>Using wearable-based TinyML gesture recognition, users can control devices with intuitive hand gestures for a seamless, hands-free smart home experience.</p>
 
                 <!-- System Architecture -->
                 <h2>System Architecture</h2>
-                <p>The system integrates hardware and software components for efficient data capture, processing, and execution of smart device commands:</p>
-                <ul><li>Fingerprint authentication on the ESP32 unlocks gesture control, enhancing security.</li>  
-                    <li>The MPU6050 sensor captures motion data from wrist movements on the wearable.</li> 
-                    <li>A session timeout mechanism ensures automatic lockout after inactivity.</li> 
-                    <li>Motion data is processed locally using an Edge Impulse TinyML model on the ESP32 to classify gestures.</li>
-                    <li>Recognized gestures are published as MQTT messages to AWS IoT Core.</li>
-                    <li>Smart home devices (lights, locks, sockets) subscribed to MQTT topics respond instantly to gestures.</li> 
-                    <li>AWS IoT Core triggers AWS Lambda functions which update Firebase with new device states.</li> 
-                    <li>The Flutter mobile app listens to Firebase in real time to reflect device status updates in the UI.</li> 
-                    <li>User-triggered actions from the mobile app update Firebase directly (e.g., toggle light).</li> 
-                    <li>Google Cloud Functions detect these Firebase updates and publish corresponding MQTT messages back to IoT Core.</li>
-                    <li>This ensures mobile commands reach the smart devices via the same MQTT pipeline without loops or conflicts.</li> 
+                <p>Our architecture supports both cloud-based and local communication for enhanced flexibility and reliability:</p>
+
+                <ul>
+                    <li>ESP32 devices with MPU6050 and fingerprint sensors classify gestures using Edge Impulse TinyML models.</li>
+                    <li>Classified gestures are published via MQTT to either AWS IoT Core or a Mosquitto broker hosted on a Raspberry Pi 3.</li>
+                    <li>The Raspberry Pi also runs a Flask server to simulate cloud services for offline operation.</li>
+                    <li>Smart devices subscribed to MQTT topics respond instantly to gesture commands.</li>
+                    <li>AWS IoT triggers Lambda functions to update Firebase, while GCP Firebase Functions sync mobile-triggered changes to MQTT.</li>
+                    <li>The Flutter mobile app reflects real-time device states using Firebase listeners.</li>
                 </ul>
+
+                <p>System diagrams for both configurations:</p>
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <img src="images/Gesture_Control.png" alt="Cloud Architecture" style="width: 100%;">
+                    <img src="images/local.png" alt="Local Architecture" style="width: 100%;">
+                </div>
 
                 <!-- Key Features -->
                 <h2>Key Features</h2>
                 <ul>
-                    <li>Hands-free operation with intuitive gestures.</li>
-                    <li>Dual authentication for door locks (fingerprint and gesture-based).</li>
-                    <li>Real-time device control and status updates via a Flutter mobile app.</li>
-                    <li>Secure communication using MQTT and AWS IoT Core.</li>
+                    <li>Hands-free gesture control via TinyML.</li>
+                    <li>Local and cloud MQTT fallback communication.</li>
+                    <li>Fingerprint and gesture-based authentication.</li>
+                    <li>Real-time updates through Firebase and Flutter app UI.</li>
                 </ul>
+
 
                 <!-- Hardware Components -->
                 <h2>Hardware Components</h2>
@@ -135,15 +139,16 @@
                     </tbody>
                 </table>
 
-                <!-- System Workflow -->
+                <!-- Workflow -->
                 <h2>System Workflow</h2>
                 <ol>
-                    <li><strong>Gesture Captured:</strong> MPU6050 records wrist movements and sends data to the ESP32.</li>
-                    <li><strong>Gesture Classified:</strong> Edge Impulse ML model identifies the gesture and maps it to a specific command.</li>
-                    <li><strong>MQTT Message Published:</strong> ESP32 sends the command to AWS IoT Core via MQTT.</li>
-                    <li><strong>Device Receives Command:</strong> Subscribed devices (door lock, smart socket, or light socket) perform the corresponding action.</li>
-                    <li><strong>Firebase & UI Update:</strong> AWS Lambda updates Firebase, and the Flutter app reflects the real-time status.</li>
+                    <li>Gesture is captured and classified by ESP32.</li>
+                    <li>MQTT message is sent to cloud or local broker.</li>
+                    <li>Smart device responds to the published command.</li>
+                    <li>Firebase is updated via Lambda or Flask backend.</li>
+                    <li>Mobile app updates reflect real-time status from Firebase.</li>
                 </ol>
+
 
                 <!-- Budget Breakdown -->
                 <h2>Budget Breakdown</h2>
