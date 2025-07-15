@@ -13,7 +13,8 @@ class SettingsLocalBrokerSection extends StatefulWidget {
 class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection> {
   final _ipController = TextEditingController();
   final _portController = TextEditingController();
-  final _wifiController = TextEditingController();
+  String? _ipError;
+  String? _portError;
 
   @override
   void initState() {
@@ -26,7 +27,6 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
     setState(() {
       _ipController.text = prefs.getString('local_broker_ip') ?? '10.0.2.2';
       _portController.text = prefs.getString('local_broker_port') ?? '5000';
-      _wifiController.text = prefs.getString('local_broker_wifi') ?? '';
     });
   }
 
@@ -34,7 +34,6 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('local_broker_ip', _ipController.text);
     await prefs.setString('local_broker_port', _portController.text);
-    await prefs.setString('local_broker_wifi', _wifiController.text);
     if (widget.onSave != null) widget.onSave!();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Local broker settings saved!')),
@@ -45,7 +44,6 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
   void dispose() {
     _ipController.dispose();
     _portController.dispose();
-    _wifiController.dispose();
     super.dispose();
   }
 
@@ -106,31 +104,6 @@ class _SettingsLocalBrokerSectionState extends State<SettingsLocalBrokerSection>
             ),
           ),
           keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _wifiController,
-          decoration: InputDecoration(
-            labelText: 'WiFi SSID',
-            hintText: 'Your WiFi Network Name',
-            prefixIcon: Icon(Icons.wifi, color: theme.colorScheme.primary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.primary,
-                width: 2,
-              ),
-            ),
-          ),
         ),
         const SizedBox(height: 24),
         SizedBox(

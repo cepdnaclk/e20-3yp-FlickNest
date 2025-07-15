@@ -27,8 +27,6 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
   String? selectedRoom;
   late final DeviceOperationsService _deviceOpsService;
 
-  _AddDeviceDialogState() : _deviceOpsService = DeviceOperationsService(null);
-
   @override
   void initState() {
     super.initState();
