@@ -34,6 +34,7 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   List<Map<String, dynamic>> _unassignedDevices = [];
   bool _isBrokerOnline = false;
   bool _isDisposed = false;
+  bool _networkListenerSet = false;
 
   @override
   void initState() {
@@ -42,6 +43,12 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     _deviceOpsService = DeviceOperationsService(_environmentId);
     _setupDevicesListener();
     _setupSymbolStateListener();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Removed ref.listen from here
   }
 
   @override
@@ -68,15 +75,27 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
               final symbolEntry = data.entries.first;
               final symbolId = symbolEntry.key;
               final symbolData = symbolEntry.value as Map<String, dynamic>;
-              final bool state = symbolData['state'] as bool;
-
+              var stateRaw = symbolData['state'];
+              bool state;
+              if (stateRaw is bool) {
+                state = stateRaw;
+              } else if (stateRaw is String) {
+                state = stateRaw.toLowerCase() == 'on' || stateRaw.toLowerCase() == 'true';
+              } else if (stateRaw is int) {
+                state = stateRaw != 0;
+              } else {
+                state = false;
+              }
               print('📱 Processing symbol: $symbolId, new state: $state');
 
               if (mounted) {
                 setState(() {
-                  // Update states of all devices using this symbol
+                  // Update states of all devices assigned to this symbol
                   _devicesByRoom.forEach((roomId, roomData) {
-                    final devices = roomData['devices'] as Map<String, dynamic>;
+                    final devicesRaw = roomData['devices'];
+                    final devices = devicesRaw is Map<String, dynamic>
+                        ? devicesRaw
+                        : Map<String, dynamic>.from(devicesRaw as Map);
                     devices.forEach((deviceId, deviceData) {
                       if (deviceData['assignedSymbol'] == symbolId) {
                         print('🔄 Updating device $deviceId state to $state');
@@ -119,7 +138,10 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
   void _updateDevicesWithSymbol(String symbolId, bool newState) {
     // Update devices in rooms
     _devicesByRoom.forEach((roomId, roomData) {
-      final devices = roomData['devices'] as Map<String, dynamic>;
+      final devicesRaw = roomData['devices'];
+      final devices = devicesRaw is Map<String, dynamic>
+          ? devicesRaw
+          : Map<String, dynamic>.from(devicesRaw as Map);
       devices.forEach((deviceId, deviceData) {
         if (deviceData['assignedSymbol'] == symbolId) {
           deviceData['state'] = newState;
@@ -404,6 +426,36 @@ class _DevicesPageState extends ConsumerState<DevicesPage> {
     final roleAsync = ref.watch(currentUserRoleProvider);
     final canAdd = roleAsync.asData?.value == 'admin' || roleAsync.asData?.value == 'co-admin';
     final theme = Theme.of(context);
+
+    // Move ref.listen to build method, but ensure it only runs once
+    if (!_networkListenerSet) {
+      _networkListenerSet = true;
+      ref.listen<NetworkMode>(networkModeProvider, (prev, next) async {
+        if (prev == NetworkMode.local && next == NetworkMode.online) {
+          final envId = _environmentId;
+          if (envId != null) {
+            for (final entry in _devicesByRoom.entries) {
+              final roomDevices = entry.value['devices'] as Map<String, dynamic>;
+              for (final deviceEntry in roomDevices.entries) {
+                final deviceId = deviceEntry.key;
+                final state = deviceEntry.value['state'];
+                await FirebaseDatabase.instance
+                    .ref('environments/$envId/devices/$deviceId/state')
+                    .set(state);
+              }
+            }
+            for (final device in _unassignedDevices) {
+              final deviceId = device['id'];
+              final state = device['state'];
+              await FirebaseDatabase.instance
+                  .ref('environments/$envId/devices/$deviceId/state')
+                  .set(state);
+            }
+            print('☁️ All local device states synced to Firebase.');
+          }
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
