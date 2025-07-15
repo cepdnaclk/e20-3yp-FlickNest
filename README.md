@@ -93,16 +93,21 @@ Edge cases such as unstable WiFi and unrecognized gestures were also considered,
 
 ## Detailed budget
 
-| Item                        | Quantity | Unit Cost (LKR) | Total (LKR) |
-|-----------------------------|:--------:|:---------------:|------------:|
-| ESP32 Dev Board             | 2        | 3000            | 6000        |
-| MPU6050 Sensor              | 2        | 800             | 1600        |
-| Relay Module                | 3        | 450             | 1350        |
-| Fingerprint Module          | 1        | 3200            | 3200        |
-| Breadboards & Wiring        | -        | 1000            | 1000        |
-| Power Supply + Battery      | 2        | 1500            | 3000        |
-| Miscellaneous Components    | -        | 2000            | 2000        |
-| **Total**                   |          |                 | **18,150**  |
+| Item                                           | Quantity | Unit Cost (LKR) | Total (LKR) |
+|----------------------------------------------  |:--------:|:---------------:|------------:|
+| Speed Xiao ESP32 Board                         | 1        | 3,200           | 3,200       |
+| ESP32 Dev Module Board                         | 4        | 2,400           | 9,600       |
+| IMU Sensor                                     | 1        | 1,000           | 1,000       |
+| R502 Fingerprint Sensor                        | 1        | 6,300           | 6,300       |
+| Battery Pack                                   | 1        | 200             | 200         |
+| Plug Socket                                    | 1        | 1,000           | 1,000       |
+| Electronic Door Lock                           | 1        | 2,500           | 2,500       |
+| 230V to 5V Converters                          | 4        | 300             | 1,200       |
+| Relays, Triacs, Resistors, etc.                | 4        | 300             | 1,200       |
+| Wires, Soldering Components                    | 1        | 3,000           | 3,000       |
+| Other Expenses                                 | 1        | 2,000           | 2,000       |
+| Flexible 3D Printed Wearable Band              | 1        | 1,800           | 1,800       |
+| **Total**                                      |          |                 | **33,000**  |
 
 ---
 
