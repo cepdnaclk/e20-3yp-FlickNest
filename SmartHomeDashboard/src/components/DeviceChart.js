@@ -33,7 +33,7 @@ export default function DeviceChart({ devices, rooms, type = 'bar', environmentI
   // Prepare data for different chart types
   const prepareBarData = () => {
     return Object.entries(rooms).map(([roomId, room]) => {
-      const roomDevices = Object.entries(devices).filter(([_, device]) => device.room === roomId);
+      const roomDevices = Object.entries(devices).filter(([_, device]) => device.roomId === roomId);
       const activeDevices = roomDevices.filter(([_, device]) => device.state).length;
       const inactiveDevices = roomDevices.length - activeDevices;
       
@@ -343,6 +343,15 @@ export default function DeviceChart({ devices, rooms, type = 'bar', environmentI
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <span className="ml-2 text-gray-500">Loading activity data...</span>
           </div>
+        ) : activityData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <Activity className="h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-gray-500 text-lg mb-2">No Activity Data</p>
+            <p className="text-gray-400 text-sm text-center max-w-md">
+              Start interacting with your devices to see activity trends over time. 
+              Device state changes will be tracked and displayed here.
+            </p>
+          </div>
         ) : (
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -378,8 +387,8 @@ export default function DeviceChart({ devices, rooms, type = 'bar', environmentI
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                   }}
                   formatter={(value, name) => {
-                    const label = name === 'active' ? 'Active Devices' : 
-                                 name === 'inactive' ? 'Inactive Devices' : 'Total Activity';
+                    const label = name === 'active' ? 'Activations' : 
+                                 name === 'inactive' ? 'Deactivations' : 'Total Activity';
                     return [`${value}`, label];
                   }}
                   labelFormatter={(label) => `Time: ${label}`}
@@ -391,7 +400,7 @@ export default function DeviceChart({ devices, rooms, type = 'bar', environmentI
                   stackId="1"
                   stroke={colors.secondary}
                   fill="url(#activeGradient)"
-                  name="Active Devices"
+                  name="Activations"
                   strokeWidth={2}
                 />
                 <Area
@@ -400,7 +409,7 @@ export default function DeviceChart({ devices, rooms, type = 'bar', environmentI
                   stackId="1"
                   stroke={colors.danger}
                   fill="url(#inactiveGradient)"
-                  name="Inactive Devices"
+                  name="Deactivations"
                   strokeWidth={2}
                 />
               </AreaChart>

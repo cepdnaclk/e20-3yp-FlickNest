@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Home, Lightbulb, Settings } from 'lucide-react';
 import DeviceCard from './DeviceCard';
 
-export default function RoomCard({ room, roomId, devices, symbols, environmentId }) {
+export default function RoomCard({ room, roomId, devices, symbols, environmentId, currentUser, rooms }) {
   const roomDevices = room.devices ? Object.keys(room.devices) : [];
   const activeDevices = roomDevices.filter(deviceId => devices[deviceId]?.state).length;
   
@@ -50,6 +50,8 @@ export default function RoomCard({ room, roomId, devices, symbols, environmentId
               deviceId={deviceId}
               environmentId={environmentId}
               symbol={symbol}
+              rooms={rooms}
+              currentUser={currentUser}
             />
           );
         })}

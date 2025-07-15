@@ -12,29 +12,41 @@ export function useDeviceActivity(environmentId, timeRange = '24h') {
       return;
     }
 
-    try {
-      // Get activity data from local storage
-      const chartData = DeviceActivityStorage.processActivitiesForChart(environmentId, timeRange);
-      setActivityData(chartData);
-      setLoading(false);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
-    
-    // Set up an interval to refresh data periodically
-    const interval = setInterval(() => {
+    // Function to load activity data
+    const loadActivityData = () => {
       try {
         const chartData = DeviceActivityStorage.processActivitiesForChart(environmentId, timeRange);
-        setActivityData(chartData);
+        setActivityData(chartData || []);
+        setLoading(false);
+        setError(null);
       } catch (err) {
+        console.error('Error loading activity data:', err);
         setError(err.message);
+        setActivityData([]);
+        setLoading(false);
       }
-    }, 30000); // Update every 30 seconds
+    };
+
+    // Initial load
+    loadActivityData();
+
+    // Set up real-time activity listener
+    const handleActivityLogged = (eventData) => {
+      if (eventData.environmentId === environmentId) {
+        loadActivityData();
+      }
+    };
+
+    DeviceActivityStorage.onActivityLogged(handleActivityLogged);
+    
+    // Set up a backup interval to refresh data periodically (in case events are missed)
+    const interval = setInterval(() => {
+      loadActivityData();
+    }, 60000); // Update every 60 seconds as backup
 
     return () => {
       clearInterval(interval);
+      DeviceActivityStorage.offActivityLogged(handleActivityLogged);
     };
   }, [environmentId, timeRange]);
 
