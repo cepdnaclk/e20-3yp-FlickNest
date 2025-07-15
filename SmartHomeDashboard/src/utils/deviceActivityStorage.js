@@ -5,6 +5,44 @@ const STORAGE_KEY = 'smart_home_device_activity';
 const USER_ACTIVITY_KEY = 'smart_home_user_activity';
 const MAX_ACTIVITY_RECORDS = 10000; // Limit to prevent storage overflow
 
+// Event system for real-time updates
+class ActivityEventEmitter {
+  constructor() {
+    this.listeners = new Map();
+  }
+
+  on(event, callback) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event).push(callback);
+  }
+
+  off(event, callback) {
+    if (this.listeners.has(event)) {
+      const callbacks = this.listeners.get(event);
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  }
+
+  emit(event, data) {
+    if (this.listeners.has(event)) {
+      this.listeners.get(event).forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error('Error in activity event listener:', error);
+        }
+      });
+    }
+  }
+}
+
+const activityEventEmitter = new ActivityEventEmitter();
+
 export class DeviceActivityStorage {
   // Store device activation/deactivation event
   static logDeviceActivity(deviceId, deviceName, roomId, roomName, state, userId, userName, environmentId) {
@@ -38,6 +76,12 @@ export class DeviceActivityStorage {
     
     // Update user activity statistics
     this.updateUserActivityStats(userId, userName, deviceId, deviceName, state, environmentId);
+    
+    // Emit event for real-time updates
+    activityEventEmitter.emit('activityLogged', {
+      activity,
+      environmentId
+    });
     
     return activity;
   }
@@ -219,7 +263,7 @@ export class DeviceActivityStorage {
     return stats;
   }
 
-  // Process activities for chart data
+  // Process activities for chart data - only show periods with actual activity
   static processActivitiesForChart(environmentId, timeRange = '24h') {
     const activities = this.getActivities(environmentId);
     const now = Date.now();
@@ -258,32 +302,44 @@ export class DeviceActivityStorage {
       activity.timestamp >= startTime && activity.timestamp <= now
     );
 
-    // Create time intervals
-    const intervals = [];
-    for (let time = startTime; time < now; time += intervalMs) {
-      intervals.push({
-        start: time,
-        end: time + intervalMs,
-        label: this.formatTimeLabel(new Date(time), timeRange)
-      });
+    // If no activities, return empty array
+    if (relevantActivities.length === 0) {
+      return [];
     }
 
-    // Process activities into intervals
-    const chartData = intervals.map(interval => {
-      const intervalActivities = relevantActivities.filter(activity =>
-        activity.timestamp >= interval.start && activity.timestamp < interval.end
-      );
-
-      const activations = intervalActivities.filter(a => a.state).length;
-      const deactivations = intervalActivities.filter(a => !a.state).length;
-
-      return {
-        time: interval.label,
-        active: activations,
-        inactive: deactivations,
-        total: activations + deactivations
-      };
+    // Group activities by time intervals
+    const activityGroups = new Map();
+    
+    relevantActivities.forEach(activity => {
+      const intervalStart = Math.floor(activity.timestamp / intervalMs) * intervalMs;
+      const intervalKey = intervalStart;
+      
+      if (!activityGroups.has(intervalKey)) {
+        activityGroups.set(intervalKey, {
+          start: intervalStart,
+          end: intervalStart + intervalMs,
+          activities: []
+        });
+      }
+      
+      activityGroups.get(intervalKey).activities.push(activity);
     });
+
+    // Convert to chart data format
+    const chartData = Array.from(activityGroups.values())
+      .sort((a, b) => a.start - b.start)
+      .map(group => {
+        const activations = group.activities.filter(a => a.state).length;
+        const deactivations = group.activities.filter(a => !a.state).length;
+        
+        return {
+          time: this.formatTimeLabel(new Date(group.start), timeRange),
+          active: activations,
+          inactive: deactivations,
+          total: activations + deactivations,
+          timestamp: group.start
+        };
+      });
 
     return chartData;
   }
@@ -365,5 +421,14 @@ export class DeviceActivityStorage {
       const mergedStats = { ...existingUserStats, ...data.userStats };
       localStorage.setItem(USER_ACTIVITY_KEY, JSON.stringify(mergedStats));
     }
+  }
+
+  // Event system methods
+  static onActivityLogged(callback) {
+    activityEventEmitter.on('activityLogged', callback);
+  }
+
+  static offActivityLogged(callback) {
+    activityEventEmitter.off('activityLogged', callback);
   }
 }

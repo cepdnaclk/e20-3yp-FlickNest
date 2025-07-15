@@ -34,6 +34,14 @@ export default function DeviceUsageDetails({ environmentId, devices }) {
     // Load user activity stats
     const stats = DeviceActivityStorage.getUserActivityStats(environmentId);
     setUsageStats(stats);
+
+    // Set up interval to refresh data every 5 seconds
+    const interval = setInterval(() => {
+      const updatedStats = DeviceActivityStorage.getUserActivityStats(environmentId);
+      setUsageStats(updatedStats);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [environmentId]);
 
   const colors = {
