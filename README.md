@@ -39,6 +39,7 @@ This solution enhances accessibility, security, and ease of interaction with hom
 ## Solution Architecture
 
 <img src="docs/images/Gesture_Control.png" width="512" height="288"/>
+<img src="docs/images/local.png" width="512" height="288"/>
 
 The system is divided into the following components:
 
