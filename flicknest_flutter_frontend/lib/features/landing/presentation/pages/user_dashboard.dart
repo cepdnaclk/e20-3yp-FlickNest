@@ -154,10 +154,13 @@ class UserDashboard extends ConsumerWidget {
               children: [
                 Icon(icon, color: color, size: 24),
                 const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -200,4 +203,5 @@ class UserDashboard extends ConsumerWidget {
       ],
     );
   }
-} 
+}
+
