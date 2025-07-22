@@ -23,8 +23,7 @@ ___
 3. [Hardware & Software Designs](#hardware-and-software-designs)
 4. [Testing](#testing)
 5. [Detailed budget](#detailed-budget)
-6. [Conclusion](#conclusion)
-7. [Links](#links)
+6. [Links](#links)
 
 ---
 
@@ -114,12 +113,6 @@ Edge cases such as unstable WiFi and unrecognized gestures were also considered,
 | Other Expenses                                 | 1        | 2,000           | 2,000       |
 | Flexible 3D Printed Wearable Band              | 1        | 1,800           | 1,800       |
 | **Total**                                      |          |                 | **33,000**  |
-
----
-
-## Conclusion
-
-FlickNest successfully demonstrates a reliable, gesture-based automation system that is both innovative and practical. By leveraging both cloud and local communication, the system ensures high availability. The project can be extended for commercial deployment, elderly/disabled user accessibility, or even integrated with voice and mobile app control for hybrid automation.
 
 ---
 
